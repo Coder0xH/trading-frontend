@@ -1,36 +1,15 @@
 import { NextResponse } from 'next/server';
 import * as ccxt from 'ccxt';
 
-// 使用 CoinGecko API 获取价格
-async function fetchCoinGeckoPrice(coinId: string = 'bitcoin', currency: string = 'usd') {
-  try {
-    const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=${currency}&include_last_updated_at=true`,
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
-    );
-    
-    if (!response.ok) {
-      throw new Error(`CoinGecko API 请求失败: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data[coinId][currency];
-  } catch (error) {
-    console.error('从 CoinGecko 获取价格时出错:', error);
-    return null;
-  }
-}
-
 // 创建交易所实例并配置
 const createExchanges = () => {
   // 为每个交易所设置代理选项
   const proxyOptions = {
     'enableRateLimit': true,
     'timeout': 30000, // 增加超时时间到30秒
+    'headers': {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
   };
 
   return {
@@ -51,9 +30,6 @@ const createExchanges = () => {
 
 export async function GET() {
   try {
-    // 获取 CoinGecko 价格作为备用
-    const coinGeckoPrice = await fetchCoinGeckoPrice();
-    
     // 每次请求创建新的交易所实例
     const exchanges = createExchanges();
     
@@ -68,17 +44,9 @@ export async function GET() {
     // 将结果组合成一个对象
     const prices: Record<string, number | undefined> = {};
     
-    results.forEach((result, index) => {
+    results.forEach((result) => {
       if (result.status === 'fulfilled' && result.value) {
         prices[result.value.exchange] = result.value.price;
-      } else {
-        // 如果交易所请求失败，使用 CoinGecko 价格作为备用
-        const exchangeName = ['binance', 'okx', 'bitget', 'bybit'][index];
-        if (coinGeckoPrice && !prices[exchangeName]) {
-          // 添加一点随机波动，模拟不同交易所的价格差异
-          const variation = (Math.random() * 0.002 - 0.001); // -0.1% 到 +0.1% 的随机波动
-          prices[exchangeName] = coinGeckoPrice * (1 + variation);
-        }
       }
     });
 
