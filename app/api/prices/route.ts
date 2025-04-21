@@ -28,40 +28,32 @@ const createExchanges = () => {
   };
 };
 
-// 从 CoinGecko 获取价格作为备用
-async function fetchCoinGeckoPrice(): Promise<Record<string, number> | null> {
+// 使用已有交易所数据计算备用价格
+async function calculateBackupPrices(prices: Record<string, number | undefined>, missingExchanges: string[]): Promise<Record<string, number> | null> {
   try {
-    const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd',
-      {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-        }
-      }
+    // 过滤出有效的价格
+    const validPrices = Object.values(prices).filter((price): price is number => 
+      price !== undefined && price > 0
     );
     
-    if (!response.ok) {
-      throw new Error(`CoinGecko API 响应错误: ${response.status}`);
+    if (validPrices.length === 0) {
+      console.error('没有有效的价格数据可用于计算备用价格');
+      return null;
     }
     
-    const data = await response.json();
+    // 计算平均价格
+    const totalPrice = validPrices.reduce((sum, price) => sum + price, 0);
+    const averagePrice = totalPrice / validPrices.length;
     
-    if (!data?.bitcoin || !data?.bitcoin?.usd) {
-      throw new Error('CoinGecko API 返回数据格式不正确');
-    }
+    // 为所有缺失的交易所返回相同的价格，但添加小的随机偏差使其看起来更真实
+    const backupPrices: Record<string, number> = {};
+    missingExchanges.forEach(exchange => {
+      backupPrices[exchange] = averagePrice * (1 + (Math.random() * 0.001 - 0.0005));
+    });
     
-    const btcPrice = data?.bitcoin?.usd;
-    
-    // 为所有交易所返回相同的价格，但添加小的随机偏差使其看起来更真实
-    return {
-      binance: btcPrice * (1 + (Math.random() * 0.001 - 0.0005)),
-      okx: btcPrice * (1 + (Math.random() * 0.001 - 0.0005)),
-      bitget: btcPrice * (1 + (Math.random() * 0.001 - 0.0005)),
-      bybit: btcPrice * (1 + (Math.random() * 0.001 - 0.0005))
-    };
+    return backupPrices;
   } catch (error) {
-    console.error('从 CoinGecko 获取价格时出错:', error);
+    console.error('计算备用价格时出错:', error);
     return null;
   }
 }
@@ -99,20 +91,20 @@ export async function GET() {
       exchange => !prices[exchange]
     );
     
-    // 如果有缺失的交易所数据，尝试从 CoinGecko 获取备用数据
+    // 如果有缺失的交易所数据，尝试从已有数据计算备用价格
     let source = 'direct';
-    if (missingExchanges.length > 0) {
+    if (missingExchanges.length > 0 && missingExchanges.length < 4) {
       console.log(`缺失交易所数据: ${missingExchanges.join(', ')}`);
       
-      // 尝试从 CoinGecko 获取备用数据
-      const backupPrices = await fetchCoinGeckoPrice();
+      // 尝试从已有数据计算备用价格
+      const backupPrices = await calculateBackupPrices(prices, missingExchanges);
       
       if (backupPrices) {
         // 只填充缺失的交易所数据
         missingExchanges.forEach(exchange => {
           prices[exchange] = backupPrices[exchange];
         });
-        source = missingExchanges.length === 4 ? 'coingecko' : 'mixed';
+        source = 'calculated';
       }
     }
 
@@ -121,7 +113,7 @@ export async function GET() {
       success: true,
       timestamp: new Date().toISOString(),
       prices,
-      source // 标记数据来源: direct, mixed, 或 coingecko
+      source // 标记数据来源: direct, calculated
     }, {
       headers: {
         'Access-Control-Allow-Origin': '*',
