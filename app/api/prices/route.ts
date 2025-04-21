@@ -28,7 +28,12 @@ const createExchanges = () => {
   };
 };
 
-// 使用已有交易所数据计算备用价格
+/**
+ * 计算缺失交易所的价格
+ * @param prices 已有交易所的价格
+ * @param missingExchanges 缺失的交易所名称
+ * @returns 计算出的价格
+ */
 async function calculateBackupPrices(prices: Record<string, number | undefined>, missingExchanges: string[]): Promise<Record<string, number> | null> {
   try {
     // 过滤出有效的价格
