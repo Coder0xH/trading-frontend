@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ExchangeName, PriceData, PriceDirection } from '@/types/price';
-import { ExchangePriceCard } from './crypto/ExchangePriceCard';
-import { PriceStatistics } from './crypto/PriceStatistics';
+import { ExchangePriceCard } from './ExchangePriceCard';
+import { PriceStatistics } from './PriceStatistics';
 
 /**
  * 加密货币价格显示组件 - 主组件
