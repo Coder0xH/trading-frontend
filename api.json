@@ -1,0 +1,720 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "title": "加密货币交易系统",
+      "description": "实时监控多个交易所的加密货币价格并执行交易策略",
+      "version": "0.1.0"
+    },
+    "paths": {
+      "/api/health": {
+        "get": {
+          "tags": [
+            "系统"
+          ],
+          "summary": "Health Check",
+          "description": "健康检查端点\n\n检查API服务和数据库连接是否正常",
+          "operationId": "health_check_api_health_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/sync/tokens": {
+        "post": {
+          "tags": [
+            "同步"
+          ],
+          "summary": "Sync Exchange Tokens",
+          "description": "同步交易所代币信息\n\n- **limit**: 同步的代币数量限制，默认为100\n- **force_update**: 是否强制更新所有代币，默认为False",
+          "operationId": "sync_exchange_tokens_api_sync_tokens_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncRequest",
+                  "default": {
+                    "limit": 100,
+                    "force_update": false
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SyncResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/sync/usdt-pairs": {
+        "post": {
+          "tags": [
+            "同步"
+          ],
+          "summary": "Sync Usdt Trading Pairs",
+          "description": "同步USDT交易对信息\n\n同步所有Binance的USDT交易对，并更新代币的交易对信息",
+          "operationId": "sync_usdt_trading_pairs_api_sync_usdt_pairs_post",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/sync/tokens/status": {
+        "get": {
+          "tags": [
+            "同步"
+          ],
+          "summary": "Get Tokens Sync Status",
+          "description": "获取代币同步状态",
+          "operationId": "get_tokens_sync_status_api_sync_tokens_status_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SyncStatusResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/tokens/stats": {
+        "get": {
+          "tags": [
+            "代币"
+          ],
+          "summary": "Get Token Stats",
+          "description": "获取代币统计信息",
+          "operationId": "get_token_stats_api_tokens_stats_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/tokens/usdt-pairs": {
+        "get": {
+          "tags": [
+            "代币"
+          ],
+          "summary": "Get Tokens With Usdt Pairs",
+          "description": "获取有USDT交易对的代币列表",
+          "operationId": "get_tokens_with_usdt_pairs_api_tokens_usdt_pairs_get",
+          "parameters": [
+            {
+              "name": "skip",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "description": "跳过的记录数",
+                "default": 0,
+                "title": "Skip"
+              },
+              "description": "跳过的记录数"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "description": "返回的记录数",
+                "default": 100,
+                "title": "Limit"
+              },
+              "description": "返回的记录数"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/BinanceTokenResponse"
+                    },
+                    "title": "Response Get Tokens With Usdt Pairs Api Tokens Usdt Pairs Get"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/tokens/symbol/{symbol}": {
+        "get": {
+          "tags": [
+            "代币"
+          ],
+          "summary": "Get Token By Symbol",
+          "description": "根据符号获取代币详情",
+          "operationId": "get_token_by_symbol_api_tokens_symbol__symbol__get",
+          "parameters": [
+            {
+              "name": "symbol",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "description": "代币符号",
+                "title": "Symbol"
+              },
+              "description": "代币符号"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/BinanceTokenResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/tokens/contract/{address}": {
+        "get": {
+          "tags": [
+            "代币"
+          ],
+          "summary": "Get Tokens By Contract",
+          "description": "根据合约地址获取代币\n\n注意：由于合约地址存储在JSON字段中，这个查询可能不是很高效",
+          "operationId": "get_tokens_by_contract_api_tokens_contract__address__get",
+          "parameters": [
+            {
+              "name": "address",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "description": "合约地址",
+                "title": "Address"
+              },
+              "description": "合约地址"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/BinanceTokenResponse"
+                    },
+                    "title": "Response Get Tokens By Contract Api Tokens Contract  Address  Get"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/tokens/{token_id}": {
+        "get": {
+          "tags": [
+            "代币"
+          ],
+          "summary": "Get Token By Id",
+          "description": "根据ID获取代币详情",
+          "operationId": "get_token_by_id_api_tokens__token_id__get",
+          "parameters": [
+            {
+              "name": "token_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer",
+                "description": "代币ID",
+                "title": "Token Id"
+              },
+              "description": "代币ID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/BinanceTokenResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/tokens": {
+        "get": {
+          "tags": [
+            "代币"
+          ],
+          "summary": "Get Tokens",
+          "description": "获取代币列表\n\n可以根据不同条件筛选代币",
+          "operationId": "get_tokens_api_tokens_get",
+          "parameters": [
+            {
+              "name": "skip",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "description": "跳过的记录数",
+                "default": 0,
+                "title": "Skip"
+              },
+              "description": "跳过的记录数"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "description": "返回的记录数",
+                "default": 100,
+                "title": "Limit"
+              },
+              "description": "返回的记录数"
+            },
+            {
+              "name": "symbol",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "代币符号，如BTC、ETH",
+                "title": "Symbol"
+              },
+              "description": "代币符号，如BTC、ETH"
+            },
+            {
+              "name": "has_contract",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "是否有合约地址",
+                "title": "Has Contract"
+              },
+              "description": "是否有合约地址"
+            },
+            {
+              "name": "has_usdt_pair",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "是否有USDT交易对",
+                "title": "Has Usdt Pair"
+              },
+              "description": "是否有USDT交易对"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/BinanceTokenResponse"
+                    },
+                    "title": "Response Get Tokens Api Tokens Get"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "BinanceTokenResponse": {
+          "properties": {
+            "id": {
+              "type": "integer",
+              "title": "Id"
+            },
+            "coin": {
+              "type": "string",
+              "title": "Coin"
+            },
+            "name": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name"
+            },
+            "is_legal_money": {
+              "type": "boolean",
+              "title": "Is Legal Money",
+              "default": false
+            },
+            "trading": {
+              "type": "boolean",
+              "title": "Trading",
+              "default": true
+            },
+            "deposit_all_enable": {
+              "type": "boolean",
+              "title": "Deposit All Enable",
+              "default": true
+            },
+            "withdraw_all_enable": {
+              "type": "boolean",
+              "title": "Withdraw All Enable",
+              "default": true
+            },
+            "networks": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Networks"
+            },
+            "contract_addresses": {
+              "anyOf": [
+                {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Contract Addresses"
+            },
+            "has_contract_address": {
+              "type": "boolean",
+              "title": "Has Contract Address",
+              "default": false
+            },
+            "usdt_trading_pair": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Usdt Trading Pair"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time",
+              "title": "Created At"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time",
+              "title": "Updated At"
+            },
+            "last_synced_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last Synced At"
+            }
+          },
+          "type": "object",
+          "required": [
+            "id",
+            "coin",
+            "created_at",
+            "updated_at"
+          ],
+          "title": "BinanceTokenResponse",
+          "description": "Binance代币的响应模型"
+        },
+        "HTTPValidationError": {
+          "properties": {
+            "detail": {
+              "items": {
+                "$ref": "#/components/schemas/ValidationError"
+              },
+              "type": "array",
+              "title": "Detail"
+            }
+          },
+          "type": "object",
+          "title": "HTTPValidationError"
+        },
+        "SyncRequest": {
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "title": "Limit",
+              "description": "同步的代币数量限制",
+              "default": 100
+            },
+            "force_update": {
+              "type": "boolean",
+              "title": "Force Update",
+              "description": "是否强制更新所有代币",
+              "default": false
+            }
+          },
+          "type": "object",
+          "title": "SyncRequest",
+          "description": "同步请求模型"
+        },
+        "SyncResponse": {
+          "properties": {
+            "success": {
+              "type": "boolean",
+              "title": "Success"
+            },
+            "message": {
+              "type": "string",
+              "title": "Message"
+            },
+            "synced_count": {
+              "type": "integer",
+              "title": "Synced Count"
+            },
+            "tokens": {
+              "items": {
+                "$ref": "#/components/schemas/BinanceTokenResponse"
+              },
+              "type": "array",
+              "title": "Tokens",
+              "default": []
+            },
+            "elapsed_time": {
+              "type": "number",
+              "title": "Elapsed Time",
+              "default": 0
+            }
+          },
+          "type": "object",
+          "required": [
+            "success",
+            "message",
+            "synced_count"
+          ],
+          "title": "SyncResponse",
+          "description": "同步响应模型"
+        },
+        "SyncStatusResponse": {
+          "properties": {
+            "total_tokens": {
+              "type": "integer",
+              "title": "Total Tokens"
+            },
+            "tokens_with_contract": {
+              "type": "integer",
+              "title": "Tokens With Contract"
+            },
+            "last_synced_at": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Last Synced At"
+            },
+            "timestamp": {
+              "type": "number",
+              "title": "Timestamp"
+            }
+          },
+          "type": "object",
+          "required": [
+            "total_tokens",
+            "tokens_with_contract",
+            "timestamp"
+          ],
+          "title": "SyncStatusResponse",
+          "description": "同步状态响应模型"
+        },
+        "ValidationError": {
+          "properties": {
+            "loc": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array",
+              "title": "Location"
+            },
+            "msg": {
+              "type": "string",
+              "title": "Message"
+            },
+            "type": {
+              "type": "string",
+              "title": "Error Type"
+            }
+          },
+          "type": "object",
+          "required": [
+            "loc",
+            "msg",
+            "type"
+          ],
+          "title": "ValidationError"
+        }
+      }
+    }
+  }
