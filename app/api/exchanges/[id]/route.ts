@@ -23,7 +23,8 @@ export async function GET(
   }
 
   try {
-    const id = params.id;
+    // 确保params是已解析的
+    const { id } = params;
     
     // 调用后端API
     const response = await fetch(`${API_BASE_URL}/api/exchanges/${id}`, {
@@ -55,7 +56,8 @@ export async function getApiKeys(
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
+    // 确保params是已解析的
+    const { id } = params;
     
     // 调用后端API获取特定交易所的API密钥
     const response = await fetch(`${API_BASE_URL}/api/exchanges/${id}/api-keys`, {
@@ -86,7 +88,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
+    // 确保params是已解析的
+    const { id } = params;
     const body = await request.json();
     
     // 调用后端API
@@ -120,7 +123,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
+    // 确保params是已解析的
+    const { id } = params;
     
     // 调用后端API
     const response = await fetch(`${API_BASE_URL}/api/exchanges/${id}`, {

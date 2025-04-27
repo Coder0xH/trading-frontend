@@ -16,7 +16,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
+    // 确保params是已解析的
+    const { id } = params;
     
     // 调用后端API获取特定交易所的API密钥
     const response = await fetch(`${API_BASE_URL}/api/exchanges/${id}/api-keys`, {
@@ -47,7 +48,8 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
+    // 确保params是已解析的
+    const { id } = params;
     const body = await request.json();
     
     // 调用后端API
