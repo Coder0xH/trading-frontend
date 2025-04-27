@@ -1,27 +1,7 @@
 'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  DatabaseIcon,
-  KeyIcon,
-  PercentIcon
-} from 'lucide-react';
-import { ExchangePlatformManager } from "@/components/exchange/ExchangePlatformManager";
-import { ApiManager } from "@/components/exchange/ApiManager";
-import { FeeManager } from "@/components/exchange/FeeManager";
-
-/**
- * 模拟交易所数据
- */
-const mockExchanges = [
-  { id: 1, name: 'BYBIT', isVerified: true, extendField: '-', marker: '-bybit1' },
-  { id: 2, name: 'BITGET', isVerified: false, extendField: '-', marker: '-bitget1' },
-  { id: 3, name: '火币', isVerified: false, extendField: '-', marker: '-火币1' },
-  { id: 4, name: 'OK', isVerified: false, extendField: '-', marker: '-OKX1' },
-  { id: 5, name: 'HYPE', isVerified: false, extendField: '-', marker: '-hype1' },
-  { id: 6, name: '币安', isVerified: false, extendField: '-', marker: '-币安1111' },
-  { id: 7, name: 'BITGET', isVerified: false, extendField: '-', marker: '-bitget新' },
-];
+import { IntegratedExchangeManager } from "@/components/exchange/IntegratedExchangeManager";
+// import { FeeManager } from "@/components/exchange/FeeManager";
 
 /**
  * 模拟手续费数据
@@ -47,37 +27,11 @@ export default function ExchangeSettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="exchanges" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="exchanges" className="flex items-center">
-            <DatabaseIcon className="mr-2 h-4 w-4" />
-            交易平台管理
-          </TabsTrigger>
-          <TabsTrigger value="api" className="flex items-center">
-            <KeyIcon className="mr-2 h-4 w-4" />
-            API管理
-          </TabsTrigger>
-          <TabsTrigger value="fees" className="flex items-center">
-            <PercentIcon className="mr-2 h-4 w-4" />
-            手续费设置
-          </TabsTrigger>
-        </TabsList>
-        
-        {/* 交易平台管理 */}
-        <TabsContent value="exchanges" className="mt-4">
-          <ExchangePlatformManager initialExchanges={mockExchanges} />
-        </TabsContent>
-        
-        {/* API管理 */}
-        <TabsContent value="api" className="mt-4">
-          <ApiManager initialExchanges={mockExchanges} />
-        </TabsContent>
-        
-        {/* 手续费设置 */}
-        <TabsContent value="fees" className="mt-4">
-          <FeeManager initialFees={mockFees} />
-        </TabsContent>
-      </Tabs>
+      {/* 交易所和API密钥管理（整合版） */}
+      <IntegratedExchangeManager />
+      
+      {/* 手续费设置 */}
+      {/* <FeeManager initialFees={mockFees} /> */}
     </div>
   );
 }

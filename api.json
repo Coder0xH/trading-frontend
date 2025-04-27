@@ -1,455 +1,148 @@
 {
-    "openapi": "3.1.0",
-    "info": {
-      "title": "加密货币交易系统",
-      "description": "实时监控多个交易所的加密货币价格并执行交易策略",
-      "version": "0.1.0"
-    },
-    "paths": {
-      "/api/health": {
-        "get": {
-          "tags": [
-            "系统"
-          ],
-          "summary": "Health Check",
-          "description": "健康检查端点\n\n检查API服务和数据库连接是否正常",
-          "operationId": "health_check_api_health_get",
-          "responses": {
-            "200": {
-              "description": "Successful Response",
-              "content": {
-                "application/json": {
-                  "schema": {
-  
-                  }
-                }
+  "openapi": "3.1.0",
+  "info": {
+    "title": "加密货币交易系统",
+    "description": "实时监控多个交易所的加密货币价格并执行交易策略",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/exchanges": {
+      "post": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "Create Exchange",
+        "description": "创建交易所\n\nArgs:\n    exchange: 交易所数据\n    controller: 交易所控制器\n    \nReturns:\n    ExchangeResponse: 创建的交易所",
+        "operationId": "create_exchange_api_exchanges_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeCreate"
               }
             }
           }
-        }
-      },
-      "/api/sync/tokens": {
-        "post": {
-          "tags": [
-            "同步"
-          ],
-          "summary": "Sync Exchange Tokens",
-          "description": "同步交易所代币信息\n\n- **limit**: 同步的代币数量限制，默认为100\n- **force_update**: 是否强制更新所有代币，默认为False",
-          "operationId": "sync_exchange_tokens_api_sync_tokens_post",
-          "requestBody": {
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SyncRequest",
-                  "default": {
-                    "limit": 100,
-                    "force_update": false
-                  }
+                  "$ref": "#/components/schemas/ExchangeResponse"
                 }
               }
             }
           },
-          "responses": {
-            "200": {
-              "description": "Successful Response",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/SyncResponse"
-                  }
-                }
-              }
-            },
-            "422": {
-              "description": "Validation Error",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/HTTPValidationError"
-                  }
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
           }
         }
       },
-      "/api/sync/usdt-pairs": {
-        "post": {
-          "tags": [
-            "同步"
-          ],
-          "summary": "Sync Usdt Trading Pairs",
-          "description": "同步USDT交易对信息\n\n同步所有Binance的USDT交易对，并更新代币的交易对信息",
-          "operationId": "sync_usdt_trading_pairs_api_sync_usdt_pairs_post",
-          "responses": {
-            "200": {
-              "description": "Successful Response",
-              "content": {
-                "application/json": {
-                  "schema": {
-  
-                  }
+      "get": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "List Exchanges",
+        "description": "获取交易所列表\n\nArgs:\n    exchange_type: 交易所类型\n    is_active: 是否启用\n    skip: 跳过记录数\n    limit: 返回记录数\n    controller: 交易所控制器\n    \nReturns:\n    List[ExchangeResponse]: 交易所列表",
+        "operationId": "list_exchanges_api_exchanges_get",
+        "parameters": [
+          {
+            "name": "exchange_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
                 }
-              }
-            }
-          }
-        }
-      },
-      "/api/sync/tokens/status": {
-        "get": {
-          "tags": [
-            "同步"
-          ],
-          "summary": "Get Tokens Sync Status",
-          "description": "获取代币同步状态",
-          "operationId": "get_tokens_sync_status_api_sync_tokens_status_get",
-          "responses": {
-            "200": {
-              "description": "Successful Response",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/SyncStatusResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/tokens/stats": {
-        "get": {
-          "tags": [
-            "代币"
-          ],
-          "summary": "Get Token Stats",
-          "description": "获取代币统计信息",
-          "operationId": "get_token_stats_api_tokens_stats_get",
-          "responses": {
-            "200": {
-              "description": "Successful Response",
-              "content": {
-                "application/json": {
-                  "schema": {
-  
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/tokens/usdt-pairs": {
-        "get": {
-          "tags": [
-            "代币"
-          ],
-          "summary": "Get Tokens With Usdt Pairs",
-          "description": "获取有USDT交易对的代币列表",
-          "operationId": "get_tokens_with_usdt_pairs_api_tokens_usdt_pairs_get",
-          "parameters": [
-            {
-              "name": "skip",
-              "in": "query",
-              "required": false,
-              "schema": {
-                "type": "integer",
-                "description": "跳过的记录数",
-                "default": 0,
-                "title": "Skip"
-              },
-              "description": "跳过的记录数"
+              ],
+              "description": "交易所类型",
+              "title": "Exchange Type"
             },
-            {
-              "name": "limit",
-              "in": "query",
-              "required": false,
-              "schema": {
-                "type": "integer",
-                "description": "返回的记录数",
-                "default": 100,
-                "title": "Limit"
-              },
-              "description": "返回的记录数"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Successful Response",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/BinanceTokenResponse"
-                    },
-                    "title": "Response Get Tokens With Usdt Pairs Api Tokens Usdt Pairs Get"
-                  }
+            "description": "交易所类型"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
                 }
-              }
+              ],
+              "description": "是否启用",
+              "title": "Is Active"
             },
-            "422": {
-              "description": "Validation Error",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/HTTPValidationError"
-                  }
-                }
-              }
-            }
+            "description": "是否启用"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "跳过记录数",
+              "default": 0,
+              "title": "Skip"
+            },
+            "description": "跳过记录数"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "返回记录数",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "返回记录数"
           }
-        }
-      },
-      "/api/tokens/symbol/{symbol}": {
-        "get": {
-          "tags": [
-            "代币"
-          ],
-          "summary": "Get Token By Symbol",
-          "description": "根据符号获取代币详情",
-          "operationId": "get_token_by_symbol_api_tokens_symbol__symbol__get",
-          "parameters": [
-            {
-              "name": "symbol",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string",
-                "description": "代币符号",
-                "title": "Symbol"
-              },
-              "description": "代币符号"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Successful Response",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/BinanceTokenResponse"
-                  }
-                }
-              }
-            },
-            "422": {
-              "description": "Validation Error",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/HTTPValidationError"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/tokens/contract/{address}": {
-        "get": {
-          "tags": [
-            "代币"
-          ],
-          "summary": "Get Tokens By Contract",
-          "description": "根据合约地址获取代币\n\n注意：由于合约地址存储在JSON字段中，这个查询可能不是很高效",
-          "operationId": "get_tokens_by_contract_api_tokens_contract__address__get",
-          "parameters": [
-            {
-              "name": "address",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "string",
-                "description": "合约地址",
-                "title": "Address"
-              },
-              "description": "合约地址"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Successful Response",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/BinanceTokenResponse"
-                    },
-                    "title": "Response Get Tokens By Contract Api Tokens Contract  Address  Get"
-                  }
-                }
-              }
-            },
-            "422": {
-              "description": "Validation Error",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/HTTPValidationError"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/tokens/{token_id}": {
-        "get": {
-          "tags": [
-            "代币"
-          ],
-          "summary": "Get Token By Id",
-          "description": "根据ID获取代币详情",
-          "operationId": "get_token_by_id_api_tokens__token_id__get",
-          "parameters": [
-            {
-              "name": "token_id",
-              "in": "path",
-              "required": true,
-              "schema": {
-                "type": "integer",
-                "description": "代币ID",
-                "title": "Token Id"
-              },
-              "description": "代币ID"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Successful Response",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/BinanceTokenResponse"
-                  }
-                }
-              }
-            },
-            "422": {
-              "description": "Validation Error",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/HTTPValidationError"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "/api/tokens": {
-        "get": {
-          "tags": [
-            "代币"
-          ],
-          "summary": "Get Tokens",
-          "description": "获取代币列表\n\n可以根据不同条件筛选代币",
-          "operationId": "get_tokens_api_tokens_get",
-          "parameters": [
-            {
-              "name": "skip",
-              "in": "query",
-              "required": false,
-              "schema": {
-                "type": "integer",
-                "description": "跳过的记录数",
-                "default": 0,
-                "title": "Skip"
-              },
-              "description": "跳过的记录数"
-            },
-            {
-              "name": "limit",
-              "in": "query",
-              "required": false,
-              "schema": {
-                "type": "integer",
-                "description": "返回的记录数",
-                "default": 100,
-                "title": "Limit"
-              },
-              "description": "返回的记录数"
-            },
-            {
-              "name": "symbol",
-              "in": "query",
-              "required": false,
-              "schema": {
-                "anyOf": [
-                  {
-                    "type": "string"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExchangeResponse"
                   },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "代币符号，如BTC、ETH",
-                "title": "Symbol"
-              },
-              "description": "代币符号，如BTC、ETH"
-            },
-            {
-              "name": "has_contract",
-              "in": "query",
-              "required": false,
-              "schema": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "是否有合约地址",
-                "title": "Has Contract"
-              },
-              "description": "是否有合约地址"
-            },
-            {
-              "name": "has_usdt_pair",
-              "in": "query",
-              "required": false,
-              "schema": {
-                "anyOf": [
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "是否有USDT交易对",
-                "title": "Has Usdt Pair"
-              },
-              "description": "是否有USDT交易对"
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Successful Response",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/BinanceTokenResponse"
-                    },
-                    "title": "Response Get Tokens Api Tokens Get"
-                  }
+                  "title": "Response List Exchanges Api Exchanges Get"
                 }
               }
-            },
-            "422": {
-              "description": "Validation Error",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/HTTPValidationError"
-                  }
+            }
+          },
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -457,264 +150,1583 @@
         }
       }
     },
-    "components": {
-      "schemas": {
-        "BinanceTokenResponse": {
-          "properties": {
-            "id": {
-              "type": "integer",
-              "title": "Id"
-            },
-            "coin": {
+    "/api/exchanges/{exchange_id}": {
+      "get": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "Get Exchange",
+        "description": "获取交易所详情\n\nArgs:\n    exchange_id: 交易所ID\n    controller: 交易所控制器\n    \nReturns:\n    ExchangeResponse: 交易所详情",
+        "operationId": "get_exchange_api_exchanges__exchange_id__get",
+        "parameters": [
+          {
+            "name": "exchange_id",
+            "in": "path",
+            "required": true,
+            "schema": {
               "type": "string",
-              "title": "Coin"
+              "description": "交易所ID",
+              "title": "Exchange Id"
             },
-            "name": {
+            "description": "交易所ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "Update Exchange",
+        "description": "更新交易所\n\nArgs:\n    update_data: 更新数据\n    exchange_id: 交易所ID\n    controller: 交易所控制器\n    \nReturns:\n    ExchangeResponse: 更新后的交易所",
+        "operationId": "update_exchange_api_exchanges__exchange_id__put",
+        "parameters": [
+          {
+            "name": "exchange_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "交易所ID",
+              "title": "Exchange Id"
+            },
+            "description": "交易所ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "Delete Exchange",
+        "description": "删除交易所\n\nArgs:\n    exchange_id: 交易所ID\n    controller: 交易所控制器\n    \nReturns:\n    Dict[str, Any]: 删除结果",
+        "operationId": "delete_exchange_api_exchanges__exchange_id__delete",
+        "parameters": [
+          {
+            "name": "exchange_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "交易所ID",
+              "title": "Exchange Id"
+            },
+            "description": "交易所ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Delete Exchange Api Exchanges  Exchange Id  Delete"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/exchanges/{exchange_id}/api-keys": {
+      "post": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "Create Api Key",
+        "description": "创建API密钥\n\nArgs:\n    api_key: API密钥数据\n    exchange_id: 交易所ID\n    controller: 交易所控制器\n    \nReturns:\n    ApiKeyFullResponse: 创建的API密钥（包含敏感信息，仅返回一次）",
+        "operationId": "create_api_key_api_exchanges__exchange_id__api_keys_post",
+        "parameters": [
+          {
+            "name": "exchange_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "交易所ID",
+              "title": "Exchange Id"
+            },
+            "description": "交易所ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyFullResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "List Api Keys",
+        "description": "获取API密钥列表\n\nArgs:\n    exchange_id: 交易所ID\n    is_default: 是否默认\n    is_testnet: 是否测试网络\n    skip: 跳过记录数\n    limit: 返回记录数\n    controller: 交易所控制器\n    \nReturns:\n    List[ApiKeyResponse]: API密钥列表",
+        "operationId": "list_api_keys_api_exchanges__exchange_id__api_keys_get",
+        "parameters": [
+          {
+            "name": "exchange_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "交易所ID",
+              "title": "Exchange Id"
+            },
+            "description": "交易所ID"
+          },
+          {
+            "name": "is_default",
+            "in": "query",
+            "required": false,
+            "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "boolean"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "title": "Name"
+              "description": "是否默认",
+              "title": "Is Default"
             },
-            "is_legal_money": {
-              "type": "boolean",
-              "title": "Is Legal Money",
-              "default": false
-            },
-            "trading": {
-              "type": "boolean",
-              "title": "Trading",
-              "default": true
-            },
-            "deposit_all_enable": {
-              "type": "boolean",
-              "title": "Deposit All Enable",
-              "default": true
-            },
-            "withdraw_all_enable": {
-              "type": "boolean",
-              "title": "Withdraw All Enable",
-              "default": true
-            },
-            "networks": {
+            "description": "是否默认"
+          },
+          {
+            "name": "is_testnet",
+            "in": "query",
+            "required": false,
+            "schema": {
               "anyOf": [
                 {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "是否测试网络",
+              "title": "Is Testnet"
+            },
+            "description": "是否测试网络"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "跳过记录数",
+              "default": 0,
+              "title": "Skip"
+            },
+            "description": "跳过记录数"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "description": "返回记录数",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "返回记录数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/components/schemas/ApiKeyResponse"
                   },
-                  "type": "array"
-                },
-                {
-                  "type": "null"
+                  "title": "Response List Api Keys Api Exchanges  Exchange Id  Api Keys Get"
                 }
-              ],
-              "title": "Networks"
-            },
-            "contract_addresses": {
-              "anyOf": [
-                {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object"
-                },
-                {
-                  "type": "null"
+              }
+            }
+          },
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
-              ],
-              "title": "Contract Addresses"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/exchanges/{exchange_id}/api-keys/default": {
+      "get": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "Get Default Api Key",
+        "description": "获取默认API密钥\n\nArgs:\n    exchange_id: 交易所ID\n    controller: 交易所控制器\n    \nReturns:\n    ApiKeyResponse: 默认API密钥",
+        "operationId": "get_default_api_key_api_exchanges__exchange_id__api_keys_default_get",
+        "parameters": [
+          {
+            "name": "exchange_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "交易所ID",
+              "title": "Exchange Id"
             },
-            "has_contract_address": {
-              "type": "boolean",
-              "title": "Has Contract Address",
-              "default": false
-            },
-            "usdt_trading_pair": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
+            "description": "交易所ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyResponse"
                 }
-              ],
-              "title": "Usdt Trading Pair"
-            },
-            "created_at": {
-              "type": "string",
-              "format": "date-time",
-              "title": "Created At"
-            },
-            "updated_at": {
-              "type": "string",
-              "format": "date-time",
-              "title": "Updated At"
-            },
-            "last_synced_at": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
+              }
+            }
+          },
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
-              ],
-              "title": "Last Synced At"
+              }
             }
-          },
-          "type": "object",
-          "required": [
-            "id",
-            "coin",
-            "created_at",
-            "updated_at"
-          ],
-          "title": "BinanceTokenResponse",
-          "description": "Binance代币的响应模型"
-        },
-        "HTTPValidationError": {
-          "properties": {
-            "detail": {
-              "items": {
-                "$ref": "#/components/schemas/ValidationError"
-              },
-              "type": "array",
-              "title": "Detail"
-            }
-          },
-          "type": "object",
-          "title": "HTTPValidationError"
-        },
-        "SyncRequest": {
-          "properties": {
-            "limit": {
-              "type": "integer",
-              "title": "Limit",
-              "description": "同步的代币数量限制",
-              "default": 100
-            },
-            "force_update": {
-              "type": "boolean",
-              "title": "Force Update",
-              "description": "是否强制更新所有代币",
-              "default": false
-            }
-          },
-          "type": "object",
-          "title": "SyncRequest",
-          "description": "同步请求模型"
-        },
-        "SyncResponse": {
-          "properties": {
-            "success": {
-              "type": "boolean",
-              "title": "Success"
-            },
-            "message": {
+          }
+        }
+      }
+    },
+    "/api/exchanges/api-keys/{api_key_id}": {
+      "get": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "Get Api Key",
+        "description": "获取API密钥详情\n\nArgs:\n    api_key_id: API密钥ID\n    controller: 交易所控制器\n    \nReturns:\n    ApiKeyResponse: API密钥详情",
+        "operationId": "get_api_key_api_exchanges_api_keys__api_key_id__get",
+        "parameters": [
+          {
+            "name": "api_key_id",
+            "in": "path",
+            "required": true,
+            "schema": {
               "type": "string",
-              "title": "Message"
+              "description": "API密钥ID",
+              "title": "Api Key Id"
             },
-            "synced_count": {
-              "type": "integer",
-              "title": "Synced Count"
-            },
-            "tokens": {
-              "items": {
-                "$ref": "#/components/schemas/BinanceTokenResponse"
-              },
-              "type": "array",
-              "title": "Tokens",
-              "default": []
-            },
-            "elapsed_time": {
-              "type": "number",
-              "title": "Elapsed Time",
-              "default": 0
-            }
-          },
-          "type": "object",
-          "required": [
-            "success",
-            "message",
-            "synced_count"
-          ],
-          "title": "SyncResponse",
-          "description": "同步响应模型"
-        },
-        "SyncStatusResponse": {
-          "properties": {
-            "total_tokens": {
-              "type": "integer",
-              "title": "Total Tokens"
-            },
-            "tokens_with_contract": {
-              "type": "integer",
-              "title": "Tokens With Contract"
-            },
-            "last_synced_at": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                {
-                  "type": "null"
+            "description": "API密钥ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyResponse"
                 }
-              ],
-              "title": "Last Synced At"
-            },
-            "timestamp": {
-              "type": "number",
-              "title": "Timestamp"
+              }
             }
           },
-          "type": "object",
-          "required": [
-            "total_tokens",
-            "tokens_with_contract",
-            "timestamp"
-          ],
-          "title": "SyncStatusResponse",
-          "description": "同步状态响应模型"
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "Update Api Key",
+        "description": "更新API密钥\n\nArgs:\n    update_data: 更新数据\n    api_key_id: API密钥ID\n    controller: 交易所控制器\n    \nReturns:\n    ApiKeyResponse: 更新后的API密钥",
+        "operationId": "update_api_key_api_exchanges_api_keys__api_key_id__put",
+        "parameters": [
+          {
+            "name": "api_key_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "API密钥ID",
+              "title": "Api Key Id"
+            },
+            "description": "API密钥ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyUpdate"
+              }
+            }
+          }
         },
-        "ValidationError": {
-          "properties": {
-            "loc": {
-              "items": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "integer"
-                  }
-                ]
-              },
-              "type": "array",
-              "title": "Location"
-            },
-            "msg": {
-              "type": "string",
-              "title": "Message"
-            },
-            "type": {
-              "type": "string",
-              "title": "Error Type"
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyResponse"
+                }
+              }
             }
           },
-          "type": "object",
-          "required": [
-            "loc",
-            "msg",
-            "type"
-          ],
-          "title": "ValidationError"
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "交易所管理"
+        ],
+        "summary": "Delete Api Key",
+        "description": "删除API密钥\n\nArgs:\n    api_key_id: API密钥ID\n    controller: 交易所控制器\n    \nReturns:\n    Dict[str, Any]: 删除结果",
+        "operationId": "delete_api_key_api_exchanges_api_keys__api_key_id__delete",
+        "parameters": [
+          {
+            "name": "api_key_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "API密钥ID",
+              "title": "Api Key Id"
+            },
+            "description": "API密钥ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Delete Api Key Api Exchanges Api Keys  Api Key Id  Delete"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
         }
       }
     }
-  }
+  },
+  "components": {
+    "schemas": {
+      "ApiKeyCreate": {
+        "properties": {
+          "exchange_id": {
+            "type": "integer",
+            "title": "Exchange Id",
+            "description": "交易所ID"
+          },
+          "api_key": {
+            "type": "string",
+            "title": "Api Key",
+            "description": "API Key"
+          },
+          "api_secret": {
+            "type": "string",
+            "title": "Api Secret",
+            "description": "API Secret"
+          },
+          "passphrase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passphrase",
+            "description": "API密码（部分交易所需要）"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "标签，如'主账户'"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "是否为默认API",
+            "default": false
+          },
+          "is_testnet": {
+            "type": "boolean",
+            "title": "Is Testnet",
+            "description": "是否为测试网络",
+            "default": false
+          },
+          "can_trade": {
+            "type": "boolean",
+            "title": "Can Trade",
+            "description": "是否允许交易",
+            "default": true
+          },
+          "can_withdraw": {
+            "type": "boolean",
+            "title": "Can Withdraw",
+            "description": "是否允许提现",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "exchange_id",
+          "api_key",
+          "api_secret",
+          "label"
+        ],
+        "title": "ApiKeyCreate",
+        "description": "创建API密钥请求模型"
+      },
+      "ApiKeyFullResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "exchange_id": {
+            "type": "integer",
+            "title": "Exchange Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default"
+          },
+          "is_testnet": {
+            "type": "boolean",
+            "title": "Is Testnet"
+          },
+          "can_trade": {
+            "type": "boolean",
+            "title": "Can Trade"
+          },
+          "can_withdraw": {
+            "type": "boolean",
+            "title": "Can Withdraw"
+          },
+          "api_key_masked": {
+            "type": "string",
+            "title": "Api Key Masked"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "api_key": {
+            "type": "string",
+            "title": "Api Key"
+          },
+          "api_secret": {
+            "type": "string",
+            "title": "Api Secret"
+          },
+          "passphrase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passphrase"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "exchange_id",
+          "label",
+          "is_default",
+          "is_testnet",
+          "can_trade",
+          "can_withdraw",
+          "api_key_masked",
+          "created_at",
+          "updated_at",
+          "api_key",
+          "api_secret"
+        ],
+        "title": "ApiKeyFullResponse",
+        "description": "包含敏感信息的API密钥响应模型（仅用于创建后的一次性返回）"
+      },
+      "ApiKeyResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "exchange_id": {
+            "type": "integer",
+            "title": "Exchange Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default"
+          },
+          "is_testnet": {
+            "type": "boolean",
+            "title": "Is Testnet"
+          },
+          "can_trade": {
+            "type": "boolean",
+            "title": "Can Trade"
+          },
+          "can_withdraw": {
+            "type": "boolean",
+            "title": "Can Withdraw"
+          },
+          "api_key_masked": {
+            "type": "string",
+            "title": "Api Key Masked"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "exchange_id",
+          "label",
+          "is_default",
+          "is_testnet",
+          "can_trade",
+          "can_withdraw",
+          "api_key_masked",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ApiKeyResponse",
+        "description": "API密钥响应模型"
+      },
+      "ApiKeyUpdate": {
+        "properties": {
+          "api_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key",
+            "description": "API Key"
+          },
+          "api_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Secret",
+            "description": "API Secret"
+          },
+          "passphrase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passphrase",
+            "description": "API密码"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label",
+            "description": "标签"
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default",
+            "description": "是否为默认API"
+          },
+          "is_testnet": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Testnet",
+            "description": "是否为测试网络"
+          },
+          "can_trade": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Can Trade",
+            "description": "是否允许交易"
+          },
+          "can_withdraw": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Can Withdraw",
+            "description": "是否允许提现"
+          }
+        },
+        "type": "object",
+        "title": "ApiKeyUpdate",
+        "description": "更新API密钥请求模型"
+      },
+      "ArbitrageDirection": {
+        "type": "string",
+        "enum": [
+          "chain_to_exchange",
+          "exchange_to_chain"
+        ],
+        "title": "ArbitrageDirection",
+        "description": "搬砖方向"
+      },
+      "ArbitrageStrategyConfig": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "策略名称"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "description": "是否启用",
+            "default": true
+          },
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "交易对，例如 INIT/USDT"
+          },
+          "chain_id": {
+            "type": "string",
+            "title": "Chain Id",
+            "description": "链ID (56=BSC, 1=ETH, 137=Polygon, 42161=Arbitrum, 10=Optimism, 43114=Avalanche)"
+          },
+          "buy_exchange_api_key_id": {
+            "type": "string",
+            "title": "Buy Exchange Api Key Id",
+            "description": "买入交易所API密钥ID"
+          },
+          "sell_exchange_api_key_id": {
+            "type": "string",
+            "title": "Sell Exchange Api Key Id",
+            "description": "卖出交易所API密钥ID"
+          },
+          "min_price_diff": {
+            "type": "number",
+            "title": "Min Price Diff",
+            "description": "最小价差百分比，例如3.0表示3%",
+            "default": 3
+          },
+          "direction": {
+            "$ref": "#/components/schemas/ArbitrageDirection",
+            "default": "chain_to_exchange"
+          },
+          "min_trade_amount": {
+            "type": "number",
+            "title": "Min Trade Amount",
+            "description": "最小交易金额"
+          },
+          "max_trade_amount": {
+            "type": "number",
+            "title": "Max Trade Amount",
+            "description": "最大交易金额"
+          },
+          "max_position": {
+            "type": "number",
+            "title": "Max Position",
+            "description": "最大持仓金额"
+          },
+          "trade_mode": {
+            "$ref": "#/components/schemas/TradeMode",
+            "description": "交易模式：现货、合约或两者",
+            "default": "spot"
+          },
+          "hedge_type": {
+            "$ref": "#/components/schemas/HedgeType",
+            "default": "none"
+          },
+          "hedge_position": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HedgePosition"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "对冲持仓方向"
+          },
+          "hedge_leverage": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hedge Leverage",
+            "description": "对冲杠杆倍数"
+          },
+          "hedge_enabled": {
+            "type": "boolean",
+            "title": "Hedge Enabled",
+            "description": "是否启用对冲",
+            "default": false
+          },
+          "bidirectional": {
+            "type": "boolean",
+            "title": "Bidirectional",
+            "description": "是否双向添加",
+            "default": false
+          },
+          "open_price_diff": {
+            "type": "number",
+            "title": "Open Price Diff",
+            "description": "开仓价差"
+          },
+          "close_price_diff": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close Price Diff",
+            "description": "平仓价差，如果为None则使用开仓价差"
+          },
+          "batch_buying": {
+            "type": "boolean",
+            "title": "Batch Buying",
+            "description": "是否启用分批购买",
+            "default": false
+          },
+          "batch_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Count",
+            "description": "分批购买的批次数"
+          },
+          "batch_interval": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Interval",
+            "description": "分批购买的时间间隔(秒)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "symbol",
+          "chain_id",
+          "buy_exchange_api_key_id",
+          "sell_exchange_api_key_id",
+          "min_trade_amount",
+          "max_trade_amount",
+          "max_position",
+          "open_price_diff"
+        ],
+        "title": "ArbitrageStrategyConfig",
+        "description": "搬砖策略配置"
+      },
+      "BinanceTokenResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "coin": {
+            "type": "string",
+            "title": "Coin"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "exchange": {
+            "type": "string",
+            "title": "Exchange",
+            "default": "binance"
+          },
+          "is_legal_money": {
+            "type": "boolean",
+            "title": "Is Legal Money",
+            "default": false
+          },
+          "trading": {
+            "type": "boolean",
+            "title": "Trading",
+            "default": true
+          },
+          "deposit_all_enable": {
+            "type": "boolean",
+            "title": "Deposit All Enable",
+            "default": true
+          },
+          "withdraw_all_enable": {
+            "type": "boolean",
+            "title": "Withdraw All Enable",
+            "default": true
+          },
+          "networks": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Networks"
+          },
+          "contract_addresses": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contract Addresses"
+          },
+          "has_contract_address": {
+            "type": "boolean",
+            "title": "Has Contract Address",
+            "default": false
+          },
+          "usdt_trading_pair": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usdt Trading Pair"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "last_synced_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Synced At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "coin",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BinanceTokenResponse",
+        "description": "Binance代币的响应模型"
+      },
+      "Body_transfer_binance_funds_api_account_binance_transfer_post": {
+        "properties": {
+          "coin": {
+            "type": "string",
+            "title": "Coin",
+            "description": "币种代码"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount",
+            "description": "划转金额"
+          },
+          "transfer_type": {
+            "$ref": "#/components/schemas/TransferType",
+            "description": "划转类型"
+          }
+        },
+        "type": "object",
+        "required": [
+          "coin",
+          "amount",
+          "transfer_type"
+        ],
+        "title": "Body_transfer_binance_funds_api_account_binance_transfer_post"
+      },
+      "Body_withdraw_from_binance_api_account_binance_withdraw_post": {
+        "properties": {
+          "coin": {
+            "type": "string",
+            "title": "Coin",
+            "description": "币种代码"
+          },
+          "amount": {
+            "type": "number",
+            "title": "Amount",
+            "description": "提现金额"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address",
+            "description": "提现地址"
+          },
+          "network": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Network",
+            "description": "网络类型，不指定则使用默认网络"
+          },
+          "memo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memo",
+            "description": "备注（某些币种需要）"
+          },
+          "tag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tag",
+            "description": "标签（某些币种需要）"
+          }
+        },
+        "type": "object",
+        "required": [
+          "coin",
+          "amount",
+          "address"
+        ],
+        "title": "Body_withdraw_from_binance_api_account_binance_withdraw_post"
+      },
+      "DepositStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "processing",
+          "success",
+          "failed"
+        ],
+        "title": "DepositStatus",
+        "description": "充值状态"
+      },
+      "ExchangeCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "交易所名称，如 binance, okx"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name",
+            "description": "交易所显示名称，如 Binance, OKX"
+          },
+          "exchange_type": {
+            "$ref": "#/components/schemas/ExchangeType"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "是否启用",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "display_name",
+          "exchange_type"
+        ],
+        "title": "ExchangeCreate",
+        "description": "创建交易所请求模型"
+      },
+      "ExchangeResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "exchange_type": {
+            "type": "string",
+            "title": "Exchange Type"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "display_name",
+          "exchange_type",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ExchangeResponse",
+        "description": "交易所响应模型"
+      },
+      "ExchangeType": {
+        "type": "string",
+        "enum": [
+          "spot",
+          "futures",
+          "dex"
+        ],
+        "title": "ExchangeType",
+        "description": "交易所类型"
+      },
+      "ExchangeUpdate": {
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name",
+            "description": "交易所显示名称"
+          },
+          "exchange_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExchangeType"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "交易所类型"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "是否启用"
+          }
+        },
+        "type": "object",
+        "title": "ExchangeUpdate",
+        "description": "更新交易所请求模型"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HedgePosition": {
+        "type": "string",
+        "enum": [
+          "long",
+          "short"
+        ],
+        "title": "HedgePosition",
+        "description": "对冲持仓方向"
+      },
+      "HedgeType": {
+        "type": "string",
+        "enum": [
+          "none",
+          "spot_futures"
+        ],
+        "title": "HedgeType",
+        "description": "对冲类型"
+      },
+      "SyncRequest": {
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "title": "Limit",
+            "description": "同步的代币数量限制",
+            "default": 100
+          },
+          "force_update": {
+            "type": "boolean",
+            "title": "Force Update",
+            "description": "是否强制更新所有代币",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "SyncRequest",
+        "description": "同步请求模型"
+      },
+      "SyncResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "synced_count": {
+            "type": "integer",
+            "title": "Synced Count"
+          },
+          "tokens": {
+            "items": {
+              "$ref": "#/components/schemas/BinanceTokenResponse"
+            },
+            "type": "array",
+            "title": "Tokens",
+            "default": []
+          },
+          "elapsed_time": {
+            "type": "number",
+            "title": "Elapsed Time",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message",
+          "synced_count"
+        ],
+        "title": "SyncResponse",
+        "description": "同步响应模型"
+      },
+      "SyncStatusResponse": {
+        "properties": {
+          "total_tokens": {
+            "type": "integer",
+            "title": "Total Tokens"
+          },
+          "tokens_with_contract": {
+            "type": "integer",
+            "title": "Tokens With Contract"
+          },
+          "last_synced_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Synced At"
+          },
+          "timestamp": {
+            "type": "number",
+            "title": "Timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_tokens",
+          "tokens_with_contract",
+          "timestamp"
+        ],
+        "title": "SyncStatusResponse",
+        "description": "同步状态响应模型"
+      },
+      "TradeMode": {
+        "type": "string",
+        "enum": [
+          "spot",
+          "futures",
+          "both"
+        ],
+        "title": "TradeMode",
+        "description": "交易模式"
+      },
+      "TransferType": {
+        "type": "string",
+        "enum": [
+          "spot_to_margin",
+          "margin_to_spot",
+          "spot_to_futures",
+          "futures_to_spot"
+        ],
+        "title": "TransferType",
+        "description": "资金划转类型"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WithdrawalStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "processing",
+          "success",
+          "failed",
+          "cancelled",
+          "rejected"
+        ],
+        "title": "WithdrawalStatus",
+        "description": "提现状态"
+      }
+    }
+  },
+  "tags": []
+}
