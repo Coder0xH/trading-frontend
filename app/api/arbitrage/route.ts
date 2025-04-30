@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * 处理POST请求
+ * 支持动态路径如 /api/arbitrage/1/execute
  */
 export async function POST(request: NextRequest) {
   try {
@@ -52,11 +53,22 @@ export async function POST(request: NextRequest) {
     const url = new URL(request.url);
     const path = url.pathname.replace('/api/arbitrage', '');
     
-    // 获取请求体
-    const body = await request.json();
+    // 获取请求体 (如果有)
+    let body = {};
+    try {
+      const contentType = request.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        body = await request.json();
+      }
+    } catch (e) {
+      // 请求可能没有body，忽略错误
+      console.error('解析请求体失败:', e);
+    }
     
     // 构建后端API URL
     const backendUrl = `${API_BASE_URL}/api/arbitrage${path}`;
+    
+    console.log(`转发POST请求到后端: ${backendUrl}`);
     
     // 调用后端API
     const response = await fetch(backendUrl, {
@@ -64,10 +76,11 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
     });
     
     if (!response.ok) {
+      console.error(`后端API返回错误: ${response.status}, URL: ${backendUrl}`);
       throw new Error(`后端API返回错误: ${response.status}`);
     }
     
