@@ -1,12 +1,10 @@
 /**
- * API密钥ID路由处理程序
- * 处理所有与特定API密钥ID相关的HTTP请求
+ * API密钥详情API路由处理程序
+ * 处理特定API密钥的HTTP请求
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-
-// 后端API基础URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+import { NextRequest } from 'next/server';
+import { API_BASE_URL, handleApiError, createApiResponse } from '@/lib/api-utils';
 
 /**
  * 处理GET请求 - 获取特定API密钥详情
@@ -29,13 +27,9 @@ export async function GET(
     const data = await response.json();
     
     // 返回响应
-    return NextResponse.json(data, { status: response.status });
+    return createApiResponse(data, response.status);
   } catch (error) {
-    console.error('获取API密钥详情失败:', error);
-    return NextResponse.json(
-      { error: '获取API密钥详情失败' },
-      { status: 500 }
-    );
+    return handleApiError(error, '获取API密钥详情失败');
   }
 }
 
@@ -63,13 +57,9 @@ export async function PUT(
     const data = await response.json();
     
     // 返回响应
-    return NextResponse.json(data, { status: response.status });
+    return createApiResponse(data, response.status);
   } catch (error) {
-    console.error('更新API密钥失败:', error);
-    return NextResponse.json(
-      { error: '更新API密钥失败' },
-      { status: 500 }
-    );
+    return handleApiError(error, '更新API密钥失败');
   }
 }
 
@@ -95,12 +85,8 @@ export async function DELETE(
     const data = await response.json();
     
     // 返回响应
-    return NextResponse.json(data, { status: response.status });
+    return createApiResponse(data, response.status);
   } catch (error) {
-    console.error('删除API密钥失败:', error);
-    return NextResponse.json(
-      { error: '删除API密钥失败' },
-      { status: 500 }
-    );
+    return handleApiError(error, '删除API密钥失败');
   }
 }

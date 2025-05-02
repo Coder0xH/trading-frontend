@@ -1,23 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-// 后端 API 基础 URL
-const API_BASE_URL = process.env.BACKEND_API_URL ?? 'http://localhost:8000';
+import { NextRequest } from 'next/server';
+import { BACKEND_API_URL, handleApiError, createApiResponse } from '@/lib/api-utils';
 
 /**
  * 处理所有套利策略相关的API请求
- * 根据请求路径和方法转发到后端API
+ */
+
+/**
+ * 处理GET请求 - 获取套利策略列表或特定策略详情
+ * @param request 请求对象
+ * @returns API响应
  */
 export async function GET(request: NextRequest) {
   try {
-    // 获取完整路径
+    // 获取请求路径和查询参数
     const url = new URL(request.url);
     const path = url.pathname.replace('/api/arbitrage', '');
-    const searchParams = url.searchParams.toString();
     
     // 构建后端API URL
-    let backendUrl = `${API_BASE_URL}/api/arbitrage${path}`;
-    if (searchParams) {
-      backendUrl = `${backendUrl}?${searchParams}`;
+    let backendUrl = `${BACKEND_API_URL}/api/arbitrage${path}`;
+    if (url.search) {
+      backendUrl += url.search;
     }
     
     // 调用后端API
@@ -25,50 +27,32 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
       },
-      cache: 'no-store',
     });
     
-    if (!response.ok) {
-      throw new Error(`后端API返回错误: ${response.status}`);
-    }
-    
+    // 获取响应数据
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    // 返回响应
+    return createApiResponse(data, response.status);
   } catch (error) {
-    console.error('套利策略API请求失败:', error);
-    return NextResponse.json(
-      { success: false, error: '套利策略API请求失败' },
-      { status: 500 }
-    );
+    return handleApiError(error, '获取套利策略数据失败');
   }
 }
 
 /**
- * 处理POST请求
- * 支持动态路径如 /api/arbitrage/1/execute
+ * 处理POST请求 - 创建新的套利策略
+ * @param request 请求对象
+ * @returns API响应
  */
 export async function POST(request: NextRequest) {
   try {
-    // 获取完整路径
+    // 获取请求路径和请求体
     const url = new URL(request.url);
     const path = url.pathname.replace('/api/arbitrage', '');
-    
-    // 获取请求体 (如果有)
-    let body = {};
-    try {
-      const contentType = request.headers.get('content-type');
-      if (contentType?.includes('application/json')) {
-        body = await request.json();
-      }
-    } catch (e) {
-      // 请求可能没有body，忽略错误
-      console.error('解析请求体失败:', e);
-    }
+    const body = await request.json();
     
     // 构建后端API URL
-    const backendUrl = `${API_BASE_URL}/api/arbitrage${path}`;
-    
-    console.log(`转发POST请求到后端: ${backendUrl}`);
+    const backendUrl = `${BACKEND_API_URL}/api/arbitrage${path}`;
     
     // 调用后端API
     const response = await fetch(backendUrl, {
@@ -76,39 +60,33 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
+      body: JSON.stringify(body),
     });
     
-    if (!response.ok) {
-      console.error(`后端API返回错误: ${response.status}, URL: ${backendUrl}`);
-      throw new Error(`后端API返回错误: ${response.status}`);
-    }
-    
+    // 获取响应数据
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    // 返回响应
+    return createApiResponse(data, response.status);
   } catch (error) {
-    console.error('套利策略API请求失败:', error);
-    return NextResponse.json(
-      { success: false, error: '套利策略API请求失败' },
-      { status: 500 }
-    );
+    return handleApiError(error, '创建套利策略失败');
   }
 }
 
 /**
- * 处理PUT请求
+ * 处理PUT请求 - 更新套利策略
+ * @param request 请求对象
+ * @returns API响应
  */
 export async function PUT(request: NextRequest) {
   try {
-    // 获取完整路径
+    // 获取请求路径和请求体
     const url = new URL(request.url);
     const path = url.pathname.replace('/api/arbitrage', '');
-    
-    // 获取请求体
     const body = await request.json();
     
     // 构建后端API URL
-    const backendUrl = `${API_BASE_URL}/api/arbitrage${path}`;
+    const backendUrl = `${BACKEND_API_URL}/api/arbitrage${path}`;
     
     // 调用后端API
     const response = await fetch(backendUrl, {
@@ -119,32 +97,29 @@ export async function PUT(request: NextRequest) {
       body: JSON.stringify(body),
     });
     
-    if (!response.ok) {
-      throw new Error(`后端API返回错误: ${response.status}`);
-    }
-    
+    // 获取响应数据
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    // 返回响应
+    return createApiResponse(data, response.status);
   } catch (error) {
-    console.error('套利策略API请求失败:', error);
-    return NextResponse.json(
-      { success: false, error: '套利策略API请求失败' },
-      { status: 500 }
-    );
+    return handleApiError(error, '更新套利策略失败');
   }
 }
 
 /**
- * 处理DELETE请求
+ * 处理DELETE请求 - 删除套利策略
+ * @param request 请求对象
+ * @returns API响应
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // 获取完整路径
+    // 获取请求路径
     const url = new URL(request.url);
     const path = url.pathname.replace('/api/arbitrage', '');
     
     // 构建后端API URL
-    const backendUrl = `${API_BASE_URL}/api/arbitrage${path}`;
+    const backendUrl = `${BACKEND_API_URL}/api/arbitrage${path}`;
     
     // 调用后端API
     const response = await fetch(backendUrl, {
@@ -154,17 +129,12 @@ export async function DELETE(request: NextRequest) {
       },
     });
     
-    if (!response.ok) {
-      throw new Error(`后端API返回错误: ${response.status}`);
-    }
-    
+    // 获取响应数据
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    // 返回响应
+    return createApiResponse(data, response.status);
   } catch (error) {
-    console.error('套利策略API请求失败:', error);
-    return NextResponse.json(
-      { success: false, error: '套利策略API请求失败' },
-      { status: 500 }
-    );
+    return handleApiError(error, '删除套利策略失败');
   }
 }

@@ -1,25 +1,21 @@
 /**
- * 交易所API密钥路由处理程序
- * 处理特定交易所的API密钥相关请求
+ * 交易所API密钥API路由处理程序
+ * 处理特定交易所的API密钥相关的HTTP请求
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-
-// 后端API基础URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+import { NextRequest } from 'next/server';
+import { API_BASE_URL, handleApiError, createApiResponse } from '@/lib/api-utils';
 
 /**
  * 处理GET请求 - 获取特定交易所的API密钥列表
  */
 export async function GET(
-  request: NextRequest,
   context: any
 ) {
   try {
-    // 确保params是已解析的
-    const { id } = context.params;
+    const id = context.params.id;
     
-    // 调用后端API获取特定交易所的API密钥
+    // 调用后端API
     const response = await fetch(`${API_BASE_URL}/api/exchanges/${id}/api-keys`, {
       headers: {
         'Content-Type': 'application/json',
@@ -30,13 +26,9 @@ export async function GET(
     const data = await response.json();
     
     // 返回响应
-    return NextResponse.json(data, { status: response.status });
+    return createApiResponse(data, response.status);
   } catch (error) {
-    console.error('获取交易所API密钥列表失败:', error);
-    return NextResponse.json(
-      { error: '获取交易所API密钥列表失败' },
-      { status: 500 }
-    );
+    return handleApiError(error, '获取交易所API密钥列表失败');
   }
 }
 
@@ -48,8 +40,7 @@ export async function POST(
   context: any
 ) {
   try {
-    // 确保params是已解析的
-    const { id } = context.params;
+    const id = context.params.id;
     const body = await request.json();
     
     // 调用后端API
@@ -65,12 +56,8 @@ export async function POST(
     const data = await response.json();
     
     // 返回响应
-    return NextResponse.json(data, { status: response.status });
+    return createApiResponse(data, response.status);
   } catch (error) {
-    console.error('创建交易所API密钥失败:', error);
-    return NextResponse.json(
-      { error: '创建交易所API密钥失败' },
-      { status: 500 }
-    );
+    return handleApiError(error, '创建交易所API密钥失败');
   }
 }
