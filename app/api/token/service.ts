@@ -2,7 +2,7 @@
  * Token API服务
  * 用于与后端API交互，获取代币相关数据
  */
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'http://13.250.110.158:8000';
 
 /**
  * 代币响应接口
