@@ -8,7 +8,7 @@
  */
 export const getApiBaseUrl = (): string => {
   // Next.js 会自动将 NEXT_PUBLIC_ 开头的环境变量暴露给客户端
-  return process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://54.179.251.138:8000';
+  return process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://13.250.110.158:8000';
 };
 
 /**
@@ -17,7 +17,7 @@ export const getApiBaseUrl = (): string => {
  */
 export const getBackendApiUrl = (): string => {
   // 服务端环境变量，只在服务端组件和API路由中可用
-  return process.env.BACKEND_API_URL ?? 'http://54.179.251.138:8000';
+  return process.env.BACKEND_API_URL ?? 'http://13.250.110.158:8000';
 };
 
 /**
