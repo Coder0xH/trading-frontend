@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -62,7 +62,7 @@ export function IntegratedExchangeManager({
   /**
    * 加载交易所列表
    */
-  const fetchExchanges = async () => {
+  const fetchExchanges = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -75,12 +75,12 @@ export function IntegratedExchangeManager({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
   
   /**
    * 加载API密钥列表
    */
-  const fetchApiKeys = async (exchangeId?: number) => {
+  const fetchApiKeys = useCallback(async (exchangeId?: number) => {
     setIsLoading(true);
     setError(null);
     
@@ -105,12 +105,12 @@ export function IntegratedExchangeManager({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
   
   /**
    * 刷新所有数据
    */
-  const refreshData = async (exchangeId?: number) => {
+  const refreshData = useCallback(async (exchangeId?: number) => {
     if (exchangeId) {
       // 只刷新特定交易所的API密钥
       await fetchApiKeys(exchangeId);
@@ -118,12 +118,12 @@ export function IntegratedExchangeManager({
       // 刷新所有数据
       await Promise.all([fetchExchanges(), fetchApiKeys()]);
     }
-  };
+  }, [fetchExchanges, fetchApiKeys]);
   
   // 初始加载数据
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [refreshData]);
   
   /**
    * 打开添加交易所表单
@@ -289,7 +289,7 @@ export function IntegratedExchangeManager({
           {/* 空状态 */}
           {!isLoading && exchanges.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              暂无交易所，点击上方"添加交易所"按钮添加
+              暂无交易所，点击上方&quot;添加交易所&quot;按钮添加
             </div>
           )}
           
@@ -335,15 +335,4 @@ export function IntegratedExchangeManager({
       />
     </div>
   );
-}
-
-interface ExchangeCardProps {
-  readonly exchange: ExchangeResponse;
-  readonly apiKeys: ApiKeyResponse[];
-  readonly onEdit: (exchange: ExchangeResponse) => void;
-  readonly onDelete: (id: number) => void;
-  readonly onAddApiKey: (exchangeId: number) => void;
-  readonly onEditApiKey: (apiKey: ApiKeyResponse) => void;
-  readonly onDeleteApiKey: (id: number) => void;
-  readonly onRefresh: () => void;
 }

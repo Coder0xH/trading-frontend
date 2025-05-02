@@ -201,7 +201,7 @@ export function ExchangeCard({
               </Table>
             ) : (
               <div className="text-center py-4 text-muted-foreground">
-                该交易所暂无API密钥，点击上方"添加API密钥"按钮添加
+                该交易所暂无API密钥，点击上方&quot;添加API密钥&quot;按钮添加
               </div>
             )}
           </div>

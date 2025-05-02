@@ -13,10 +13,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
-    const id = params.id;
+    const id = context.params.id;
     
     // 调用后端API
     const response = await fetch(`${API_BASE_URL}/api/api-keys/${id}`, {
@@ -44,10 +44,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
-    const id = params.id;
+    const id = context.params.id;
     const body = await request.json();
     
     // 调用后端API
@@ -78,10 +78,10 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
-    const id = params.id;
+    const id = context.params.id;
     
     // 调用后端API
     const response = await fetch(`${API_BASE_URL}/api/api-keys/${id}`, {

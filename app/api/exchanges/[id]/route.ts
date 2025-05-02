@@ -9,22 +9,22 @@ import { NextRequest, NextResponse } from 'next/server';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
 /**
- * 处理GET请求 - 获取特定交易所详情
+ * 处理GET请求 - 获取特定交易所详情或API密钥列表
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   // 检查请求路径是否包含api-keys
   const path = request.nextUrl.pathname;
   if (path.endsWith('/api-keys')) {
-    // 如果是请求API密钥，则调用新的GET函数处理
-    return getApiKeys(request, { params });
+    // 如果是请求API密钥，则调用API密钥处理函数
+    return handleApiKeysGet(request, context);
   }
 
   try {
     // 确保params是已解析的
-    const { id } = params;
+    const { id } = context.params;
     
     // 调用后端API
     const response = await fetch(`${API_BASE_URL}/api/exchanges/${id}`, {
@@ -51,13 +51,13 @@ export async function GET(
  * 处理GET请求 - 获取特定交易所的API密钥列表
  * 路径: /api/exchanges/{id}/api-keys
  */
-export async function getApiKeys(
+async function handleApiKeysGet(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
     // 确保params是已解析的
-    const { id } = params;
+    const { id } = context.params;
     
     // 调用后端API获取特定交易所的API密钥
     const response = await fetch(`${API_BASE_URL}/api/exchanges/${id}/api-keys`, {
@@ -85,11 +85,11 @@ export async function getApiKeys(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
     // 确保params是已解析的
-    const { id } = params;
+    const { id } = context.params;
     const body = await request.json();
     
     // 调用后端API
@@ -120,11 +120,11 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
     // 确保params是已解析的
-    const { id } = params;
+    const { id } = context.params;
     
     // 调用后端API
     const response = await fetch(`${API_BASE_URL}/api/exchanges/${id}`, {

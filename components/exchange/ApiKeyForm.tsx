@@ -201,7 +201,7 @@ export function ApiKeyForm({
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
-              用于区分不同的API密钥，如"主账户"、"子账户1"等
+              用于区分不同的API密钥，如&quot;主账户&quot;、&quot;子账户1&quot;等
             </p>
           </div>
           

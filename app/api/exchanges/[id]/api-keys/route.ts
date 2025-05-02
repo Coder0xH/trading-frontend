@@ -13,11 +13,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
     // 确保params是已解析的
-    const { id } = params;
+    const { id } = context.params;
     
     // 调用后端API获取特定交易所的API密钥
     const response = await fetch(`${API_BASE_URL}/api/exchanges/${id}/api-keys`, {
@@ -45,11 +45,11 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
     // 确保params是已解析的
-    const { id } = params;
+    const { id } = context.params;
     const body = await request.json();
     
     // 调用后端API

@@ -7,16 +7,16 @@ const API_BASE_URL = process.env.BACKEND_API_URL ?? 'http://localhost:8000';
  * 处理套利策略执行的POST请求
  * 路径格式: /api/arbitrage/[id]/execute
  * @param request - 请求对象
- * @param params - 路由参数，包含策略ID
+ * @param context - 路由上下文，包含策略ID
  * @returns NextResponse
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: any
 ) {
   try {
-    // 获取策略ID (确保等待params解析完成)
-    const id = await params.id;
+    // 获取策略ID
+    const id = context.params.id;
     
     console.log(`正在执行套利策略: ${id}`);
     
