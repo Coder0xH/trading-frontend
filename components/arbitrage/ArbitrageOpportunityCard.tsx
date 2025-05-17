@@ -1,16 +1,16 @@
 'use client';
 
-import { 
-  Card, 
-  CardContent, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  TrendingUpIcon, 
+import {
+  TrendingUpIcon,
   AlertTriangleIcon
 } from 'lucide-react';
 

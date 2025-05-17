@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { MoonIcon, SunIcon, TrendingUpIcon, BarChart3Icon, HistoryIcon, GaugeIcon, LayersIcon, Settings2Icon } from 'lucide-react';
+import { MoonIcon, SunIcon, TrendingUpIcon, BarChart3Icon, HistoryIcon, Settings2Icon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -65,17 +65,7 @@ export function Header() {
       icon: HistoryIcon,
     },
     {
-      name: '市场监控',
-      href: '/monitor',
-      icon: GaugeIcon,
-    },
-    {
-      name: '多链资产',
-      href: '/assets',
-      icon: LayersIcon,
-    },
-    {
-      name: '交易所设置',
+      name: '账户设置',
       href: '/settings',
       icon: Settings2Icon,
     },

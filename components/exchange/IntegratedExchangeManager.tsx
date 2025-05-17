@@ -10,23 +10,13 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, RefreshCwIcon } from 'lucide-react';
-import { 
-  ExchangeResponse, 
-  ApiKeyResponse, 
-  ExchangeCreate,
-  ApiKeyCreate,
-  listExchanges,
-  createExchange,
-  updateExchange,
-  deleteExchange,
-  listApiKeys,
-  createApiKey,
-  updateApiKey,
-  deleteApiKey
-} from '@/services/exchangeApi';
+import { exchangeApi } from '@/api/exchanges';
+import { apiKeyApi } from '@/api/apiKeys';
 import { ExchangeCard } from './ExchangeCard';
 import { ExchangeForm } from './ExchangeForm';
 import { ApiKeyForm } from './ApiKeyForm';
+import { ExchangeCreate, ExchangeResponse, ExchangeType } from '@/types/exchange';
+import { ApiKeyResponse, ApiKeyCreate } from '@/types/apiKey';
 
 /**
  * 整合交易所管理组件属性接口
@@ -67,11 +57,45 @@ export function IntegratedExchangeManager({
     setError(null);
     
     try {
-      const data = await listExchanges();
-      setExchanges(data);
+      const response = await exchangeApi.getExchanges();
+      console.log('API响应数据:', response);
+      
+      // 判断响应是否为数组
+      const exchanges = Array.isArray(response) ? response : (response?.data?.records || response?.data || []);
+      
+      // 确保数据存在并有效
+      if (exchanges && exchanges.length > 0) {
+        console.log('原始交易所数据:', exchanges);
+        
+        // 数据已经是正确的格式，直接使用
+        if (exchanges[0].display_name && exchanges[0].exchange_type) {
+          console.log('交易所数据格式正确，直接使用');
+          setExchanges(exchanges as ExchangeResponse[]);
+        } else {
+          // 需要转换格式
+          const formattedExchanges = exchanges.map(exchange => {
+            console.log('处理交易所数据:', exchange);
+            return {
+              id: Number(exchange.id ?? 0),
+              name: exchange.name ?? '',
+              display_name: exchange.display_name ?? exchange.name ?? '',
+              exchange_type: exchange.exchange_type ?? (exchange.type as ExchangeType) ?? ExchangeType.SPOT,
+              is_active: exchange.is_active ?? exchange.status === 'active',
+              created_at: exchange.created_at ?? exchange.createdAt ?? new Date().toISOString(),
+              updated_at: exchange.updated_at ?? exchange.updatedAt ?? new Date().toISOString()
+            };
+          });
+          console.log('格式化后的交易所数据:', formattedExchanges);
+          setExchanges(formattedExchanges);
+        }
+      } else {
+        console.warn('未找到交易所数据');
+        setExchanges([]);
+      }
     } catch (err) {
       console.error('获取交易所列表失败:', err);
       setError('获取交易所列表失败，请稍后重试');
+      setExchanges([]);
     } finally {
       setIsLoading(false);
     }
@@ -85,19 +109,66 @@ export function IntegratedExchangeManager({
     setError(null);
     
     try {
-      const data = await listApiKeys(exchangeId);
+      if (!exchangeId) {
+        // 如果没有提供交易所ID，返回空数组
+        setApiKeys([]);
+        return;
+      }
       
-      // 如果提供了特定交易所ID，只更新该交易所的API密钥
-      if (exchangeId) {
-        setApiKeys(prevApiKeys => {
-          // 移除该交易所的旧API密钥
-          const filteredKeys = prevApiKeys.filter(key => key.exchange_id !== exchangeId);
-          // 添加新获取的API密钥
-          return [...filteredKeys, ...data];
-        });
+      const response = await apiKeyApi.getExchangeApiKeys(exchangeId.toString());
+      console.log('API密钥响应数据:', response);
+      
+      // 判断响应是否为数组
+      const apiKeys = Array.isArray(response) ? response : 
+                    (response?.data?.records ?? response?.data ?? []);
+      
+      console.log('原始API密钥数据:', apiKeys);
+      
+      // 确保数据存在并有效
+      if (apiKeys && apiKeys.length > 0) {
+        // 判断数据是否已经是正确的格式
+        if (apiKeys[0].label && apiKeys[0].exchange_id) {
+          console.log('API密钥数据格式正确，直接使用');
+          // 如果提供了特定交易所ID，只更新该交易所的API密钥
+          setApiKeys(prevApiKeys => {
+            // 移除该交易所的旧API密钥
+            const filteredKeys = prevApiKeys.filter(key => key.exchange_id !== exchangeId);
+            // 添加新获取的API密钥
+            return [...filteredKeys, ...apiKeys];
+          });
+        } else {
+          // 需要转换格式
+          const formattedApiKeys = apiKeys.map(apiKey => {
+            console.log('处理API密钥数据:', apiKey);
+            return {
+              id: Number(apiKey.id ?? 0),
+              exchange_id: Number(apiKey.exchange_id ?? apiKey.exchangeId ?? exchangeId),
+              label: apiKey.label ?? apiKey.name ?? '',
+              api_key: apiKey.api_key ?? apiKey.apiKey ?? '',
+              api_key_masked: apiKey.api_key_masked ?? (apiKey.apiKey ? `${apiKey.apiKey.substring(0, 4)}****${apiKey.apiKey.substring(apiKey.apiKey.length - 4)}` : '********'),
+              api_secret_masked: apiKey.api_secret_masked ?? '********',
+              is_default: apiKey.is_default ?? true,
+              created_at: apiKey.created_at ?? apiKey.createdAt ?? new Date().toISOString(),
+              updated_at: apiKey.updated_at ?? apiKey.updatedAt ?? new Date().toISOString()
+            };
+          });
+          
+          console.log('格式化后的API密钥数据:', formattedApiKeys);
+          
+          // 如果提供了特定交易所ID，只更新该交易所的API密钥
+          setApiKeys(prevApiKeys => {
+            // 移除该交易所的旧API密钥
+            const filteredKeys = prevApiKeys.filter(key => key.exchange_id !== exchangeId);
+            // 添加新获取的API密钥
+            return [...filteredKeys, ...formattedApiKeys];
+          });
+        }
       } else {
-        // 获取所有API密钥
-        setApiKeys(data);
+        console.warn('未找到API密钥数据');
+        // 不清除其他交易所的API密钥
+        setApiKeys(prevApiKeys => {
+          return prevApiKeys.filter(key => key.exchange_id !== exchangeId);
+        });
       }
     } catch (err) {
       console.error('获取API密钥列表失败:', err);
@@ -149,16 +220,31 @@ export function IntegratedExchangeManager({
     setError(null);
     
     try {
+      console.log('提交交易所数据:', exchange);
+      
+      // 将旧API的参数转换为新API的格式
+      const newExchangeData = {
+        name: exchange.name,
+        display_name: exchange.display_name,
+        exchange_type: exchange.exchange_type,
+        is_active: exchange.is_active
+      };
+      
+      console.log('发送到后端的交易所数据:', newExchangeData);
+      
       if (editingExchange) {
-        await updateExchange(editingExchange.id, exchange);
+        await exchangeApi.updateExchange(editingExchange.id.toString(), newExchangeData);
       } else {
-        await createExchange(exchange);
+        await exchangeApi.createExchange(newExchangeData);
       }
       
       await fetchExchanges();
-    } catch (err) {
+      setIsExchangeFormOpen(false);
+      setEditingExchange(null);
+    } catch (err: any) {
       console.error('保存交易所失败:', err);
-      throw err;
+      const errorMsg = err.response?.data?.detail ?? err.message ?? '保存交易所失败，请稍后重试';
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -172,7 +258,7 @@ export function IntegratedExchangeManager({
     setError(null);
     
     try {
-      await deleteExchange(id);
+      await exchangeApi.deleteExchange(id.toString());
       await refreshData();
     } catch (err) {
       console.error('删除交易所失败:', err);
@@ -208,16 +294,26 @@ export function IntegratedExchangeManager({
     setError(null);
     
     try {
+      // 将旧API的参数转换为新API的格式
+      const newApiKeyData = {
+        name: apiKey.label,
+        apiKey: apiKey.api_key,
+        apiSecret: apiKey.api_secret,
+        passphrase: apiKey.passphrase
+      };
+      
       if (editingApiKey) {
-        await updateApiKey(editingApiKey.id, apiKey);
+        await apiKeyApi.updateApiKey(editingApiKey.id.toString(), newApiKeyData);
       } else {
-        await createApiKey(apiKey, apiKey.exchange_id);
+        await apiKeyApi.createExchangeApiKey(apiKey.exchange_id.toString(), newApiKeyData);
       }
       
-      await fetchApiKeys();
+      await fetchApiKeys(apiKey.exchange_id);
+      setIsApiKeyFormOpen(false);
+      setEditingApiKey(null);
     } catch (err) {
       console.error('保存API密钥失败:', err);
-      throw err;
+      setError('保存API密钥失败，请稍后重试');
     } finally {
       setIsLoading(false);
     }
@@ -231,7 +327,7 @@ export function IntegratedExchangeManager({
     setError(null);
     
     try {
-      await deleteApiKey(id);
+      await apiKeyApi.deleteApiKey(id.toString());
       await fetchApiKeys();
     } catch (err) {
       console.error('删除API密钥失败:', err);

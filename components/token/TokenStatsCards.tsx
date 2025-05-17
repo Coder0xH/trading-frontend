@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SyncStatusResponse } from '@/app/api/token/service';
+import { SyncStatusResponse } from '@/api/token/service';
 
 interface TokenStatsCardsProps {
   readonly syncStatus: SyncStatusResponse | null;

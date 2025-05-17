@@ -27,9 +27,9 @@ import {
 } from 'lucide-react';
 import { 
   ExchangeResponse, 
-  ApiKeyResponse, 
   ExchangeType
-} from '@/services/exchangeApi';
+} from '@/types/exchange';
+import { ApiKeyResponse } from '@/types/apiKey';
 
 /**
  * 交易所卡片组件属性接口
@@ -89,6 +89,8 @@ export function ExchangeCard({
         return '合约';
       case ExchangeType.BOTH:
         return '现货和合约';
+      case ExchangeType.DEX:
+        return 'DEX';
       default:
         return '未知';
     }

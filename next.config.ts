@@ -1,15 +1,65 @@
 import type { NextConfig } from "next";
+import path from "path";
 
+/**
+ * Next.js 配置
+ */
 const nextConfig: NextConfig = {
-  /* config options here */
-  eslint: {
-    // 警告仍然会显示在控制台中，但不会导致构建失败
-    ignoreDuringBuilds: true,
+  output: "standalone",
+  distDir: ".next",
+
+  // 配置构建缓存
+  poweredByHeader: false,
+  generateBuildId: () => 'build',
+
+  // 配置构建优化
+  compiler: {
+    // 移除 console.log
+    // removeConsole: process.env.NODE_ENV === 'production',
   },
-  // 环境变量配置 - 注意：这里定义的环境变量会在构建时被注入
-  env: {
-    // 这些值会覆盖.env文件中的同名变量
-    // 只有在构建时需要固定值时才在这里设置
+
+  // 添加安全头配置
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "viewport-fit",
+            value: "cover",
+          },
+          {
+            key: "viewport",
+            value:
+              "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
+          },
+        ],
+      },
+    ];
+  },
+
+  // 开发环境下重写请求地址
+  async rewrites() {
+    // 只在开发环境中重写API请求
+    if (process.env.NODE_ENV === "development") {
+      const apiUrl = "http://localhost:8000";
+      return [
+        {
+          source: "/api/:path*",
+          destination: `${apiUrl}/api/:path*`,
+        },
+      ];
+    }
+    return [];
+  },
+
+  // 配置别名
+  experimental: {
+    turbo: {
+      resolveAlias: {
+        "@": path.join(__dirname, "src"),
+      },
+    },
   },
 };
 

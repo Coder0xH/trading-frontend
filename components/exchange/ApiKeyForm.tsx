@@ -20,11 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  ExchangeResponse, 
-  ApiKeyResponse, 
-  ApiKeyCreate
-} from '@/services/exchangeApi';
+import { ApiKeyCreate, ApiKeyResponse } from '@/types/apiKey';
+import { ExchangeResponse } from '@/types/exchange';
 
 /**
  * API密钥表单组件属性接口

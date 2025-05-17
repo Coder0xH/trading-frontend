@@ -9,7 +9,7 @@ import {
   getTokensSyncStatus, 
   syncExchangeTokens, 
   syncUsdtTradingPairs 
-} from '@/app/api/token/service';
+} from '@/api/token/service';
 import { useToast } from '@/components/ui/use-toast';
 
 /**

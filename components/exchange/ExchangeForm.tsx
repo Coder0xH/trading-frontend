@@ -24,7 +24,7 @@ import {
   ExchangeResponse, 
   ExchangeCreate, 
   ExchangeType
-} from '@/services/exchangeApi';
+} from '@/types/exchange';
 
 /**
  * 交易所表单组件属性接口
@@ -171,6 +171,7 @@ export function ExchangeForm({
                 <SelectItem value={ExchangeType.SPOT}>现货</SelectItem>
                 <SelectItem value={ExchangeType.FUTURES}>合约</SelectItem>
                 <SelectItem value={ExchangeType.BOTH}>现货和合约</SelectItem>
+                <SelectItem value={ExchangeType.DEX}>DEX</SelectItem>
               </SelectContent>
             </Select>
           </div>

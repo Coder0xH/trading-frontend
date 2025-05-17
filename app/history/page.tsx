@@ -47,68 +47,7 @@ const mockTradeHistory = [
     status: 'completed',
     timestamp: new Date().getTime() - 2 * 60 * 60 * 1000,
     txHash: '0x8a7d953a2bd916e2f6322a809f7c6e83c8d3b9e8a7d953a2bd916e2',
-  },
-  {
-    id: '2',
-    strategyName: 'BTC 三角套利',
-    buyExchange: 'Binance',
-    sellExchange: 'Binance',
-    symbol: 'BTC/USDT -> BTC/ETH -> ETH/USDT',
-    buyPrice: 63250.50,
-    sellPrice: 63750.25,
-    amount: 0.05,
-    profit: 24.99,
-    profitPercentage: 0.79,
-    status: 'completed',
-    timestamp: new Date().getTime() - 5 * 60 * 60 * 1000,
-    txHash: '0x7c6e83c8d3b9e8a7d953a2bd916e2f6322a809f7c6e83c8d3b9e8',
-  },
-  {
-    id: '3',
-    strategyName: 'SOL 闪电套利',
-    buyExchange: 'Jupiter',
-    sellExchange: 'Raydium',
-    symbol: 'SOL/USDC',
-    buyPrice: 142.25,
-    sellPrice: 145.50,
-    amount: 2.5,
-    profit: 8.13,
-    profitPercentage: 2.28,
-    status: 'failed',
-    timestamp: new Date().getTime() - 12 * 60 * 60 * 1000,
-    txHash: '0x2bd916e2f6322a809f7c6e83c8d3b9e8a7d953a2bd916e2f6322',
-    errorMessage: '交易执行超时',
-  },
-  {
-    id: '4',
-    strategyName: '稳定币套利',
-    buyExchange: 'Binance',
-    sellExchange: 'OKX',
-    symbol: 'USDT/USDC -> USDC/DAI -> DAI/USDT',
-    buyPrice: 0.9985,
-    sellPrice: 1.0015,
-    amount: 5000,
-    profit: 15.00,
-    profitPercentage: 0.30,
-    status: 'completed',
-    timestamp: new Date().getTime() - 24 * 60 * 60 * 1000,
-    txHash: '0x6322a809f7c6e83c8d3b9e8a7d953a2bd916e2f6322a809f7c6e',
-  },
-  {
-    id: '5',
-    strategyName: 'ETH-USDT 跨所套利',
-    buyExchange: 'Binance',
-    sellExchange: 'OKX',
-    symbol: 'ETH/USDT',
-    buyPrice: 3460.50,
-    sellPrice: 3510.25,
-    amount: 0.75,
-    profit: 37.31,
-    profitPercentage: 1.44,
-    status: 'completed',
-    timestamp: new Date().getTime() - 36 * 60 * 60 * 1000,
-    txHash: '0x83c8d3b9e8a7d953a2bd916e2f6322a809f7c6e83c8d3b9e8a7d',
-  },
+  }
 ];
 
 /**
@@ -323,11 +262,6 @@ export default function HistoryPage() {
                   </TableCell>
                   <TableCell>
                     {getStatusBadge(trade.status)}
-                    {trade.errorMessage && (
-                      <div className="text-xs text-red-500 mt-1">
-                        {trade.errorMessage}
-                      </div>
-                    )}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground text-xs">
                     {formatDateTime(trade.timestamp)}

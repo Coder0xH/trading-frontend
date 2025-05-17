@@ -9,7 +9,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { BinanceTokenResponse } from '@/app/api/token/service';
+import { BinanceTokenResponse } from '@/api/token/service';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,7 +43,7 @@ export function TokenTable({
    */
   const renderSkeletons = () => {
     return Array(5).fill(0).map((_, index) => (
-      <TableRow key={`skeleton-${index}`}>
+      <TableRow key={`skeleton-${Math.random().toString(36).substring(2, 11)}-${index}`}>
         <TableCell><Skeleton className="h-4 w-8" /></TableCell>
         <TableCell><Skeleton className="h-4 w-16" /></TableCell>
         <TableCell><Skeleton className="h-4 w-24" /></TableCell>
