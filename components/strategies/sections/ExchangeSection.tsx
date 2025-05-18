@@ -306,8 +306,8 @@ export function ExchangeSection({
             )}
           </div>
           <Select
-            value={strategy.buy_exchange_api_key_id}
-            onValueChange={(value) => onStrategyChange({ buy_exchange_api_key_id: value })}
+            value={strategy.buy_exchange_api_key_id ? String(strategy.buy_exchange_api_key_id) : undefined}
+            onValueChange={(value) => onStrategyChange({ buy_exchange_api_key_id: value ? Number(value) : undefined })}
             disabled={loadingApiKeys || buyExchangeApiKeys.length === 0 || isRefreshing}
           >
             <SelectTrigger>
@@ -315,7 +315,8 @@ export function ExchangeSection({
             </SelectTrigger>
             <SelectContent>
               {buyExchangeApiKeys.map((apiKey) => (
-                <SelectItem key={apiKey.id} value={apiKey.id}>
+                <SelectItem key={apiKey.id} value={String(apiKey.id)}>
+                  {/* 优先使用label或name作为显示名称 */}
                   {apiKey.label ?? apiKey.name ?? `API密钥 ${apiKey.id}`}
                 </SelectItem>
               ))}
@@ -350,8 +351,8 @@ export function ExchangeSection({
             )}
           </div>
           <Select
-            value={strategy.sell_exchange_api_key_id}
-            onValueChange={(value) => onStrategyChange({ sell_exchange_api_key_id: value })}
+            value={strategy.sell_exchange_api_key_id ? String(strategy.sell_exchange_api_key_id) : undefined}
+            onValueChange={(value) => onStrategyChange({ sell_exchange_api_key_id: value ? Number(value) : undefined })}
             disabled={loadingApiKeys || sellExchangeApiKeys.length === 0 || isRefreshing}
           >
             <SelectTrigger>
@@ -359,7 +360,8 @@ export function ExchangeSection({
             </SelectTrigger>
             <SelectContent>
               {sellExchangeApiKeys.map((apiKey) => (
-                <SelectItem key={apiKey.id} value={apiKey.id}>
+                <SelectItem key={apiKey.id} value={String(apiKey.id)}>
+                  {/* 优先使用label或name作为显示名称 */}
                   {apiKey.label ?? apiKey.name ?? `API密钥 ${apiKey.id}`}
                 </SelectItem>
               ))}

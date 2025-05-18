@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog,
@@ -73,6 +74,8 @@ export function QuickStrategyForm({
   onSuccess,
   opportunityData
 }: Readonly<QuickStrategyFormProps>) {
+  // 使用toast组件
+  const { toast } = useToast();
   // 使用 useMemo 包装默认值对象，避免在每次渲染时重新创建
   const defaultValues = useMemo<ArbitrageStrategyConfig>(() => ({
     name: opportunityData ? `${opportunityData.symbol} 套利策略` : '',
@@ -197,17 +200,53 @@ export function QuickStrategyForm({
       setIsLoading(true);
       setError(null);
       
-      const response = await arbitrageApi.createStrategy(strategy);
+      // 验证必填字段
+      if (!strategy.buy_exchange_api_key_id) {
+        setError('请选择买入交易所API密钥');
+        return;
+      }
       
-      if (response.data?.data) {
-        alert('策略创建成功！');
+      if (!strategy.sell_exchange_api_key_id) {
+        setError('请选择卖出交易所API密钥');
+        return;
+      }
+      
+      // 确保API密钥ID是数字类型
+      const strategyData = {
+        ...strategy,
+        buy_exchange_api_key_id: parseInt(String(strategy.buy_exchange_api_key_id), 10),
+        sell_exchange_api_key_id: parseInt(String(strategy.sell_exchange_api_key_id), 10)
+      };
+      
+      console.log('发送的策略数据:', strategyData);
+      
+      const response = await arbitrageApi.createStrategy(strategyData);
+      
+      if (response.code == 200) {
+        // 使用toast替代alert
+        toast({
+          title: '成功',
+          description: '策略创建成功！',
+          variant: 'default',
+        });
         onSuccess();
         onOpenChange(false);
       } else {
+        toast({
+          title: '错误',
+          description: '创建策略失败，请检查表单并重试',
+          variant: 'destructive',
+        });
         setError('创建策略失败，请检查表单并重试');
       }
     } catch (err) {
       console.error('创建策略失败:', err);
+      // 使用toast显示错误
+      toast({
+        title: '错误',
+        description: '创建策略失败，请检查表单并重试',
+        variant: 'destructive',
+      });
       setError('创建策略失败，请检查表单并重试');
     } finally {
       setIsLoading(false);
@@ -222,8 +261,28 @@ export function QuickStrategyForm({
       setIsExecuting(true);
       setError(null);
       
+      // 验证必填字段
+      if (!strategy.buy_exchange_api_key_id) {
+        setError('请选择买入交易所API密钥');
+        return;
+      }
+      
+      if (!strategy.sell_exchange_api_key_id) {
+        setError('请选择卖出交易所API密钥');
+        return;
+      }
+      
+      // 确保API密钥ID是数字类型
+      const strategyData = {
+        ...strategy,
+        buy_exchange_api_key_id: parseInt(String(strategy.buy_exchange_api_key_id), 10),
+        sell_exchange_api_key_id: parseInt(String(strategy.sell_exchange_api_key_id), 10)
+      };
+      
+      console.log('发送的策略数据:', strategyData);
+      
       // 1. 创建策略
-      const createResponse = await arbitrageApi.createStrategy(strategy);
+      const createResponse = await arbitrageApi.createStrategy(strategyData);
       
       if (!createResponse.data?.data) {
         setError('创建策略失败，请检查表单并重试');
@@ -233,11 +292,22 @@ export function QuickStrategyForm({
       // 2. 执行策略
       await arbitrageApi.executeStrategy(createResponse.data.data.id);
       
-      alert('策略创建并执行成功！');
+      // 使用toast替代alert
+      toast({
+        title: '成功',
+        description: '策略创建并执行成功！',
+        variant: 'default',
+      });
       onSuccess();
       onOpenChange(false);
     } catch (err) {
       console.error('创建或执行策略失败:', err);
+      // 使用toast显示错误
+      toast({
+        title: '错误',
+        description: '创建或执行策略失败，请检查表单并重试',
+        variant: 'destructive',
+      });
       setError('创建或执行策略失败，请检查表单并重试');
     } finally {
       setIsExecuting(false);
@@ -271,6 +341,7 @@ export function QuickStrategyForm({
             
             <div className="flex-grow" style={{ minHeight: '320px' }}>
               <TabsContent value="basic" className="space-y-4 h-full">
+                {/* 代币基本信息 */}
                 <BasicInfoSection 
                   strategy={strategy} 
                   onStrategyChange={handleStrategyChange} 
@@ -278,6 +349,7 @@ export function QuickStrategyForm({
               </TabsContent>
               
               <TabsContent value="exchange" className="space-y-4 h-full">
+                {/* 交易所 api 选择设置 */}
                 <ExchangeSection 
                   strategy={strategy} 
                   onStrategyChange={handleStrategyChange}
@@ -289,6 +361,7 @@ export function QuickStrategyForm({
               </TabsContent>
               
               <TabsContent value="trade" className="space-y-4 h-full">
+                {/* 交易参数组件 */}
                 <TradeParamsSection 
                   strategy={strategy} 
                   onStrategyChange={handleStrategyChange} 
@@ -296,6 +369,7 @@ export function QuickStrategyForm({
               </TabsContent>
               
               <TabsContent value="advanced" className="space-y-4 h-full">
+                {/* 对冲合约高级设置 */}
                 <AdvancedSettingsSection 
                   strategy={strategy} 
                   onStrategyChange={handleStrategyChange} 

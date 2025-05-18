@@ -23,8 +23,8 @@ export interface ArbitrageStrategyConfig {
   token_address?: string;
   buy_exchange: string;
   sell_exchange: string;
-  buy_exchange_api_key_id?: string;
-  sell_exchange_api_key_id?: string;
+  buy_exchange_api_key_id?: number;
+  sell_exchange_api_key_id?: number;
   min_price_diff?: number;
   direction?: ArbitrageDirection;
   min_trade_amount: number;
