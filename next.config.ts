@@ -38,19 +38,20 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // 开发环境下重写请求地址
+  // 重写请求地址
   async rewrites() {
-    // 只在开发环境中重写API请求
-    if (process.env.NODE_ENV === "development") {
-      const apiUrl = "http://13.250.110.158:8000";
-      return [
-        {
-          source: "/api/:path*",
-          destination: `${apiUrl}/api/:path*`,
-        },
-      ];
-    }
-    return [];
+    // 获取API URL，优先使用环境变量
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://13.250.110.158:8000";
+    
+    console.log(`当前环境: ${process.env.NODE_ENV}, API URL: ${apiUrl}`);
+    
+    // 在所有环境中重写API请求
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${apiUrl}/api/:path*`,
+      },
+    ];
   },
 
   // 配置别名
