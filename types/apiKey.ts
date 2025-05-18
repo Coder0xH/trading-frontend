@@ -19,19 +19,6 @@ export interface ApiKey {
 }
 
 /**
- * API密钥创建参数
- */
-export interface ApiKeyCreate {
-  exchange_id: number;
-  label: string;
-  api_key: string;
-  api_secret: string;
-  passphrase?: string;
-  is_default?: boolean;
-  [key: string]: any;
-}
-
-/**
  * API密钥响应
  */
 export interface ApiKeyResponse {

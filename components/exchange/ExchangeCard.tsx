@@ -1,35 +1,36 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  PlusIcon, 
+import {
+  PlusIcon,
   TrashIcon,
   PencilIcon,
   KeyIcon,
   ChevronDownIcon,
   ChevronUpIcon
 } from 'lucide-react';
-import { 
-  ExchangeResponse, 
+import {
+  ExchangeResponse,
   ExchangeType
 } from '@/types/exchange';
 import { ApiKeyResponse } from '@/types/apiKey';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
 /**
  * 交易所卡片组件属性接口
@@ -49,19 +50,24 @@ interface ExchangeCardProps {
  * 交易所卡片组件
  * 显示交易所信息和相关的API密钥
  */
-export function ExchangeCard({ 
-  exchange, 
-  apiKeys, 
-  onEdit, 
-  onDelete, 
-  onAddApiKey, 
-  onEditApiKey, 
+export function ExchangeCard({
+  exchange,
+  apiKeys,
+  onEdit,
+  onDelete,
+  onAddApiKey,
+  onEditApiKey,
   onDeleteApiKey,
   onRefresh
 }: ExchangeCardProps) {
   // 展开/折叠状态
   const [isExpanded, setIsExpanded] = useState(false);
   
+  // 确认对话框状态
+  const [deleteExchangeDialogOpen, setDeleteExchangeDialogOpen] = useState(false);
+  const [deleteApiKeyDialogOpen, setDeleteApiKeyDialogOpen] = useState(false);
+  const [apiKeyToDelete, setApiKeyToDelete] = useState<ApiKeyResponse | null>(null);
+
   // 获取该交易所的API密钥
   const exchangeApiKeys = isExpanded ? apiKeys.filter(apiKey => apiKey.exchange_id === exchange.id) : [];
 
@@ -69,13 +75,13 @@ export function ExchangeCard({
   const handleToggle = () => {
     const newExpandedState = !isExpanded;
     setIsExpanded(newExpandedState);
-    
+
     // 如果是展开状态，刷新数据
     if (newExpandedState) {
       onRefresh();
     }
   };
-  
+
   /**
    * 获取交易所类型显示文本
    * @param type - 交易所类型
@@ -95,16 +101,23 @@ export function ExchangeCard({
         return '未知';
     }
   };
-  
+
   /**
    * 处理删除交易所
    */
-  const handleDelete = () => {
-    if (window.confirm(`确定要删除交易所 ${exchange.display_name} 吗？`)) {
-      onDelete(exchange.id);
-    }
+  const handleDeleteExchange = () => {
+    onDelete(exchange.id);
   };
   
+  /**
+   * 处理删除API密钥
+   */
+  const handleDeleteApiKey = () => {
+    if (apiKeyToDelete) {
+      onDeleteApiKey(apiKeyToDelete.id);
+    }
+  };
+
   return (
     <Card className="mb-4">
       <CardHeader className="pb-2">
@@ -115,17 +128,17 @@ export function ExchangeCard({
               {exchange.is_active ? '启用' : '禁用'}
             </Badge>
           </CardTitle>
-          
+
           <div className="flex space-x-2">
             <Button variant="outline" size="icon" onClick={() => onEdit(exchange)}>
               <PencilIcon className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={handleDelete}>
+            <Button variant="outline" size="icon" onClick={() => setDeleteExchangeDialogOpen(true)}>
               <TrashIcon className="h-4 w-4" />
             </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
+            <Button
+              variant="outline"
+              size="icon"
               onClick={handleToggle}
             >
               {isExpanded ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
@@ -133,13 +146,13 @@ export function ExchangeCard({
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <div className="text-sm text-muted-foreground mb-2">
           <div><strong>标识:</strong> {exchange.name}</div>
           <div><strong>类型:</strong> {getExchangeTypeText(exchange.exchange_type)}</div>
         </div>
-        
+
         {isExpanded && (
           <div className="mt-4">
             <div className="flex justify-between items-center mb-2">
@@ -147,16 +160,16 @@ export function ExchangeCard({
                 <KeyIcon className="h-4 w-4 mr-2" />
                 API密钥
               </h3>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => onAddApiKey(exchange.id)}
               >
                 <PlusIcon className="h-4 w-4 mr-1" />
                 添加API密钥
               </Button>
             </div>
-            
+
             {exchangeApiKeys.length > 0 ? (
               <Table>
                 <TableHeader>
@@ -184,13 +197,12 @@ export function ExchangeCard({
                           <Button variant="ghost" size="icon" onClick={() => onEditApiKey(apiKey)}>
                             <PencilIcon className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => {
-                              if (window.confirm(`确定要删除API密钥 ${apiKey.label} 吗？`)) {
-                                onDeleteApiKey(apiKey.id);
-                              }
+                              setApiKeyToDelete(apiKey);
+                              setDeleteApiKeyDialogOpen(true);
                             }}
                           >
                             <TrashIcon className="h-4 w-4" />
@@ -209,6 +221,28 @@ export function ExchangeCard({
           </div>
         )}
       </CardContent>
+      
+      {/* 删除交易所确认对话框 */}
+      <ConfirmDialog
+        open={deleteExchangeDialogOpen}
+        onOpenChange={setDeleteExchangeDialogOpen}
+        onConfirm={handleDeleteExchange}
+        title="删除交易所"
+        description={`确定要删除交易所 ${exchange.display_name} 吗？删除后将无法恢复。`}
+        confirmText="删除"
+        confirmVariant="destructive"
+      />
+      
+      {/* 删除API密钥确认对话框 */}
+      <ConfirmDialog
+        open={deleteApiKeyDialogOpen}
+        onOpenChange={setDeleteApiKeyDialogOpen}
+        onConfirm={handleDeleteApiKey}
+        title="删除API密钥"
+        description={`确定要删除API密钥 ${apiKeyToDelete?.label ?? ''} 吗？删除后将无法恢复。`}
+        confirmText="删除"
+        confirmVariant="destructive"
+      />
     </Card>
   );
 }

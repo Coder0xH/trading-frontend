@@ -1,7 +1,6 @@
 'use client';
 
 import { IntegratedExchangeManager } from "@/components/exchange/IntegratedExchangeManager";
-// import { FeeManager } from "@/components/exchange/FeeManager";
 
 /**
  * 交易所设置页面组件
@@ -19,9 +18,6 @@ export default function ExchangeSettingsPage() {
 
       {/* 交易所和API密钥管理（整合版） */}
       <IntegratedExchangeManager />
-      
-      {/* 手续费设置 */}
-      {/* <FeeManager initialFees={mockFees} /> */}
     </div>
   );
 }

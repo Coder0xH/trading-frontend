@@ -14,15 +14,6 @@ import { ApiKey, UpdateApiKeyParams } from '@/types/apiKey';
  */
 export const apiKeyApi = {
   /**
-   * 获取API密钥列表
-   * @param params 查询参数
-   * @returns API密钥列表
-   */
-  getApiKeys: async (params?: Record<string, any>) => {
-    return request.get<ApiListResponse<ApiKey>>('/api-keys', params);
-  },
-
-  /**
    * 获取交易所的API密钥列表
    * @param exchangeId 交易所ID
    * @param params 查询参数
@@ -30,15 +21,6 @@ export const apiKeyApi = {
    */
   getExchangeApiKeys: async (exchangeId: string, params?: Record<string, any>) => {
     return request.get<ApiListResponse<ApiKey>>(`/exchanges/${exchangeId}/api-keys`, params);
-  },
-
-  /**
-   * 创建API密钥
-   * @param data API密钥数据
-   * @returns 创建的API密钥ID
-   */
-  createApiKey: async (data: CreateExchangeApiKeyParams) => {
-    return request.post<string>('/api-keys', data);
   },
 
   /**
@@ -52,22 +34,13 @@ export const apiKeyApi = {
   },
 
   /**
-   * 获取API密钥详情
-   * @param id API密钥ID
-   * @returns API密钥详情
-   */
-  getApiKeyById: async (id: string) => {
-    return request.get<ApiKey>(`/api-keys/${id}`);
-  },
-
-  /**
    * 更新API密钥
    * @param id API密钥ID
    * @param data 更新数据
    * @returns 更新结果
    */
   updateApiKey: async (id: string, data: UpdateApiKeyParams) => {
-    return request.put<ApiResponse<null>>(`/api-keys/${id}`, data);
+    return request.put<ApiResponse<null>>(`/exchanges/api-keys/${id}`, data);
   },
 
   /**
@@ -76,7 +49,7 @@ export const apiKeyApi = {
    * @returns 删除结果
    */
   deleteApiKey: async (id: string) => {
-    return request.delete<ApiResponse<null>>(`/api-keys/${id}`);
+    return request.delete<ApiResponse<null>>(`/exchanges/api-keys/${id}`);
   }
 };
 

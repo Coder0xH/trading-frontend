@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { 
   Dialog,
   DialogContent,
@@ -20,8 +19,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ApiKeyCreate, ApiKeyResponse } from '@/types/apiKey';
-import { ExchangeResponse } from '@/types/exchange';
+import { ApiKeyResponse } from '@/types/apiKey';
+import { ExchangeResponse, CreateExchangeApiKeyParams } from '@/types/exchange';
+import { useApiKeyForm } from '@/hooks/useApiKeyForm';
 
 /**
  * API密钥表单组件属性接口
@@ -29,7 +29,7 @@ import { ExchangeResponse } from '@/types/exchange';
 interface ApiKeyFormProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
-  readonly onSubmit: (apiKey: ApiKeyCreate) => Promise<void>;
+  readonly onSubmit: (apiKey: CreateExchangeApiKeyParams) => Promise<void>;
   readonly exchanges: ExchangeResponse[];
   readonly editingApiKey?: ApiKeyResponse | null;
   readonly initialExchangeId?: number;
@@ -49,82 +49,31 @@ export function ApiKeyForm({
   initialExchangeId,
   isLoading = false
 }: ApiKeyFormProps) {
-  // 表单状态
-  const [formValues, setFormValues] = useState<ApiKeyCreate>({
-    exchange_id: initialExchangeId ?? 0,
-    label: '',
-    api_key: '',
-    api_secret: '',
-    passphrase: '',
-    is_default: false
-  });
-  
-  // 错误状态
-  const [error, setError] = useState<string | null>(null);
-  
-  // 表单标题
-  const formTitle = editingApiKey ? '编辑API密钥' : '添加API密钥';
-  
-  // 当编辑的API密钥改变时，更新表单值
-  useEffect(() => {
-    if (editingApiKey) {
-      setFormValues({
-        exchange_id: editingApiKey.exchange_id,
-        label: editingApiKey.label,
-        api_key: '', // 不回显敏感信息
-        api_secret: '',
-        passphrase: '',
-        is_default: editingApiKey.is_default
-      });
-    } else if (initialExchangeId) {
-      setFormValues({
-        exchange_id: initialExchangeId,
-        label: '',
-        api_key: '',
-        api_secret: '',
-        passphrase: '',
-        is_default: false
-      });
-    } else {
-      // 重置表单
-      setFormValues({
-        exchange_id: exchanges.length > 0 ? exchanges[0].id : 0,
-        label: '',
-        api_key: '',
-        api_secret: '',
-        passphrase: '',
-        is_default: false
-      });
-    }
-  }, [editingApiKey, initialExchangeId, exchanges]);
+  // 使用自定义hook管理表单状态
+  const {
+    formValues,
+    updateField,
+    error,
+    setError,
+    formTitle,
+    formDescription,
+    validateForm,
+    isEditing
+  } = useApiKeyForm(editingApiKey, initialExchangeId, exchanges);
   
   /**
    * 处理表单提交
    */
   const handleSubmit = async () => {
     // 验证表单
-    if (!formValues.exchange_id) {
-      setError('请选择交易所');
+    if (!validateForm()) {
       return;
     }
-    
-    if (!formValues.label) {
-      setError('请输入标签');
-      return;
-    }
-    
-    // 如果是新建API密钥，则验证API Key和Secret
-    if (!editingApiKey && (!formValues.api_key || !formValues.api_secret)) {
-      setError('请输入API Key和Secret');
-      return;
-    }
-    
-    setError(null);
     
     try {
       // 如果是编辑模式，且没有填写API Key和Secret，则只更新标签和是否默认
-      if (editingApiKey) {
-        const updateData: Partial<ApiKeyCreate> = {
+      if (isEditing) {
+        const updateData: Partial<CreateExchangeApiKeyParams> = {
           label: formValues.label,
           is_default: formValues.is_default
         };
@@ -134,7 +83,7 @@ export function ApiKeyForm({
         if (formValues.api_secret) updateData.api_secret = formValues.api_secret;
         if (formValues.passphrase) updateData.passphrase = formValues.passphrase;
         
-        await onSubmit(updateData as ApiKeyCreate);
+        await onSubmit(updateData as CreateExchangeApiKeyParams);
       } else {
         await onSubmit(formValues);
       }
@@ -153,9 +102,7 @@ export function ApiKeyForm({
         <DialogHeader>
           <DialogTitle>{formTitle}</DialogTitle>
           <DialogDescription>
-            {editingApiKey 
-              ? '修改API密钥信息，如不需修改密钥可留空' 
-              : '添加新的API密钥，所有带*的字段为必填'}
+            {formDescription}
           </DialogDescription>
         </DialogHeader>
         
@@ -171,7 +118,7 @@ export function ApiKeyForm({
               <Label htmlFor="exchange-id" className="text-red-500">* 交易所:</Label>
               <Select 
                 value={formValues.exchange_id.toString()}
-                onValueChange={(value) => setFormValues({...formValues, exchange_id: parseInt(value)})}
+                onValueChange={(value) => updateField('exchange_id', parseInt(value))}
                 disabled={!!initialExchangeId || isLoading}
               >
                 <SelectTrigger>
@@ -194,7 +141,7 @@ export function ApiKeyForm({
               id="api-label" 
               placeholder="输入标签，如'主账户'" 
               value={formValues.label}
-              onChange={(e) => setFormValues({...formValues, label: e.target.value})}
+              onChange={(e) => updateField('label', e.target.value)}
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
@@ -208,9 +155,9 @@ export function ApiKeyForm({
             </Label>
             <Input 
               id="api-key" 
-              placeholder={editingApiKey ? "留空则不修改" : "输入API Key"} 
+              placeholder={isEditing ? "留空则不修改" : "输入API Key"} 
               value={formValues.api_key}
-              onChange={(e) => setFormValues({...formValues, api_key: e.target.value})}
+              onChange={(e) => updateField('api_key', e.target.value)}
               disabled={isLoading}
             />
           </div>
@@ -222,9 +169,9 @@ export function ApiKeyForm({
             <Input 
               id="api-secret" 
               type="password"
-              placeholder={editingApiKey ? "留空则不修改" : "输入API Secret"} 
+              placeholder={isEditing ? "留空则不修改" : "输入API Secret"} 
               value={formValues.api_secret}
-              onChange={(e) => setFormValues({...formValues, api_secret: e.target.value})}
+              onChange={(e) => updateField('api_secret', e.target.value)}
               disabled={isLoading}
             />
           </div>
@@ -234,9 +181,9 @@ export function ApiKeyForm({
             <Input 
               id="passphrase" 
               type="password"
-              placeholder={editingApiKey ? "留空则不修改" : "输入密码短语（如有）"} 
-              value={formValues.passphrase}
-              onChange={(e) => setFormValues({...formValues, passphrase: e.target.value})}
+              placeholder={isEditing ? "留空则不修改" : "输入密码短语（如有）"} 
+              value={formValues.passphrase ?? ''}
+              onChange={(e) => updateField('passphrase', e.target.value)}
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
@@ -248,7 +195,7 @@ export function ApiKeyForm({
             <Switch 
               id="is-default" 
               checked={formValues.is_default}
-              onCheckedChange={(checked) => setFormValues({...formValues, is_default: checked})}
+              onCheckedChange={(checked) => updateField('is_default', checked)}
               disabled={isLoading}
             />
             <Label htmlFor="is-default">设为默认</Label>
@@ -261,7 +208,7 @@ export function ApiKeyForm({
           </Button>
           <Button 
             onClick={handleSubmit}
-            disabled={isLoading || (!editingApiKey && (!formValues.exchange_id || !formValues.label || !formValues.api_key || !formValues.api_secret))}
+            disabled={isLoading || (!isEditing && (!formValues.exchange_id || !formValues.label || !formValues.api_key || !formValues.api_secret))}
           >
             {isLoading ? '处理中...' : '保存'}
           </Button>

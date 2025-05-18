@@ -91,8 +91,14 @@ export interface UpdateExchangeParams {
  * 创建交易所API密钥参数
  */
 export interface CreateExchangeApiKeyParams {
-  name: string;
-  apiKey: string;
-  apiSecret: string;
+  exchange_id: number;
+  label: string;
+  api_key: string;
+  api_secret: string;
+  passphrase?: string;
+  is_default: boolean;
+  is_testnet: boolean;
+  can_trade: boolean;
+  can_withdraw: boolean;
   [key: string]: any;
 }
