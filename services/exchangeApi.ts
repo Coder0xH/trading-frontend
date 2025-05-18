@@ -6,8 +6,8 @@
  */
 
 import { exchangeApi } from '@/api/exchanges';
-import { ExchangeResponse, ExchangeCreate, ExchangeType } from '@/types/exchange';
-import { ApiKeyResponse, ApiKeyCreate } from '@/types/apiKey';
+import { ExchangeResponse, ExchangeCreate, ExchangeType, CreateExchangeApiKeyParams } from '@/types/exchange';
+import { ApiKeyResponse } from '@/types/apiKey';
 
 /**
  * 将新API的Exchange类型转换为ExchangeResponse类型
@@ -145,43 +145,12 @@ export const listApiKeys = async (exchangeId?: number): Promise<ApiKeyResponse[]
 };
 
 /**
- * 创建API密钥
- * @param apiKey - API密钥信息
- * @param exchangeId - 交易所ID
- * @returns 创建结果
- */
-export const createApiKey = async (apiKey: ApiKeyCreate, exchangeId?: number): Promise<ApiKeyResponse> => {
-  try {
-    const targetExchangeId = exchangeId ?? apiKey.exchange_id;
-    if (!targetExchangeId) {
-      throw new Error('缺少交易所ID');
-    }
-    
-    // 将旧API的参数转换为新API的格式
-    const newApiKeyData = {
-      name: apiKey.label,
-      apiKey: apiKey.api_key,
-      apiSecret: apiKey.api_secret
-    };
-    
-    const response = await exchangeApi.createExchangeApiKey(targetExchangeId.toString(), newApiKeyData);
-    // 将新API的响应转换为旧API的格式
-    const result = convertToApiKeyResponse(response.data);
-    result.exchange_id = targetExchangeId;
-    return result;
-  } catch (error) {
-    console.error('创建API密钥失败:', error);
-    throw error;
-  }
-};
-
-/**
  * 更新API密钥
  * @param id - API密钥ID
  * @param apiKey - API密钥信息
  * @returns 更新结果
  */
-export const updateApiKey = async (id: number, apiKey: Partial<ApiKeyCreate>): Promise<ApiKeyResponse> => {
+export const updateApiKey = async (id: number, apiKey: Partial<CreateExchangeApiKeyParams>): Promise<ApiKeyResponse> => {
   try {
     // 注意：新API可能没有直接更新API密钥的方法
     // 这里模拟一个成功响应

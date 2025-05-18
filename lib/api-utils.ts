@@ -17,7 +17,7 @@ export const BACKEND_API_URL = config.backendApiUrl;
  * @param status HTTP 状态码
  * @returns NextResponse 对象
  */
-export function createApiResponse(data: any, status: number = 200): NextResponse {
+export function createApiResponse(data: unknown, status: number = 200): NextResponse {
   return NextResponse.json(data, { status });
 }
 
@@ -37,7 +37,7 @@ export function createErrorResponse(message: string, status: number = 500): Next
  * @param errorMessage 错误消息
  * @returns NextResponse 对象
  */
-export function handleApiError(error: any, errorMessage: string): NextResponse {
+export function handleApiError(error: unknown, errorMessage: string): NextResponse {
   console.error(`${errorMessage}:`, error);
   return createErrorResponse(errorMessage);
 }
