@@ -1,0 +1,35 @@
+# 忽略node_modules目录
+node_modules
+
+# 忽略开发环境文件
+.env.local
+.env.development
+.env.test
+
+# 忽略Git相关文件
+.git
+.gitignore
+
+# 忽略构建输出
+.next
+out
+
+# 忽略日志文件
+*.log
+npm-debug.log*
+
+# 忽略编辑器配置
+.vscode
+.idea
+*.swp
+*.swo
+
+# 忽略测试文件
+__tests__
+*.test.js
+*.spec.js
+
+# 忽略文档和其他不需要的文件
+README.md
+LICENSE
+docs

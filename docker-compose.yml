@@ -1,0 +1,42 @@
+services:
+  frontend:
+    image: coderdexter/trading-frontend:latest
+    container_name: frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    ports:
+      - "3000:3000"
+    networks:
+      - dexter-network
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    read_only: false # 禁用只读模式
+    tmpfs:
+      - /tmp
+    volumes:
+      - /tmp/nextjs-cache:/app/.next/cache # 缓存目录挂载到宿主机的 /tmp 目录
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    stop_grace_period: 10s
+    labels:
+      - "com.docker.compose.project=trading-frontend"
+      - "com.docker.compose.service=frontend"
+
+networks:
+  dexter-network:
+    external: true
