@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import path from "path";
 
 /**
  * Next.js 配置
@@ -44,8 +43,6 @@ const nextConfig: NextConfig = {
     // const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://13.250.110.158:8000";
     const apiUrl = "http://13.250.110.158:8000";
     
-    console.log(`当前环境: ${process.env.NODE_ENV}, API URL: ${apiUrl}`);
-    
     // 在所有环境中重写API请求
     return [
       {
@@ -55,14 +52,6 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // 配置别名
-  experimental: {
-    turbo: {
-      resolveAlias: {
-        "@": path.join(__dirname, "src"),
-      },
-    },
-  },
 };
 
 export default nextConfig;

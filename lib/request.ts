@@ -61,19 +61,8 @@ export interface ApiListResponse<T> {
  * @property {number} timeout - 超时时间
  * @property {object} headers - 请求头
  */
-
-const getBaseUrl = () => {
-  // 如果在服务器端运行
-  if (typeof window === "undefined") {
-    // 在服务器端使用完整的 URL
-    return "http://13.250.110.158:8000/api";
-  }
-  // 在客户端使用相对路径，让 rewrites 生效
-  return "/api";
-};
-
 const instance: AxiosInstance = axios.create({
-  baseURL: getBaseUrl(),
+  baseURL: "/api",
   timeout: 20000,
   headers: {
     "Content-Type": "application/json",
