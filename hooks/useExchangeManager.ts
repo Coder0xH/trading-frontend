@@ -52,7 +52,7 @@ export function useExchangeManager(
       console.log('API响应数据:', response);
       
       // 判断响应是否为数组
-      const exchanges = Array.isArray(response) ? response : (response?.data?.records || response?.data || []);
+      const exchanges = Array.isArray(response) ? response : (response?.data?.items || response?.data || []);
       
       // 确保数据存在并有效
       if (exchanges && exchanges.length > 0) {
@@ -110,8 +110,7 @@ export function useExchangeManager(
       console.log('API密钥响应数据:', response);
       
       // 判断响应是否为数组
-      const apiKeys = Array.isArray(response) ? response : 
-                    (response?.data?.records ?? response?.data ?? []);
+      const apiKeys = Array.isArray(response) ? response : (response?.data?.items);
       
       console.log('原始API密钥数据:', apiKeys);
       

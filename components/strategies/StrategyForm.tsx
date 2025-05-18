@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   ArbitrageStrategyConfig,
   ArbitrageDirection
 } from '@/types/arbitrage';
 import arbitrageApi from '@/api/arbitrage';
+import { apiKeyApi } from '@/api/apiKeys';
+import { exchangeApi } from '@/api/exchanges';
+import { ApiKey } from '@/types/apiKey';
+import { Exchange } from '@/types/exchange';
 
 interface StrategyFormProps {
   isOpen: boolean;
@@ -38,9 +49,76 @@ export function StrategyForm({
   editingStrategyId,
   initialValues
 }: Readonly<StrategyFormProps>) {
-  const [strategy, setStrategy] = useState<ArbitrageStrategyConfig>(initialValues);
+  const [strategy, setStrategy] = useState<ArbitrageStrategyConfig & {
+    buy_exchange_api_key_id?: string;
+    sell_exchange_api_key_id?: string;
+  }>({...initialValues, buy_exchange_api_key_id: '', sell_exchange_api_key_id: ''});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [exchanges, setExchanges] = useState<Exchange[]>([]);
+  const [buyExchangeApiKeys, setBuyExchangeApiKeys] = useState<ApiKey[]>([]);
+  const [sellExchangeApiKeys, setSellExchangeApiKeys] = useState<ApiKey[]>([]);
+  const [loadingApiKeys, setLoadingApiKeys] = useState(false);
+  
+  // 加载交易所列表
+  useEffect(() => {
+    const fetchExchanges = async () => {
+      try {
+        const response = await exchangeApi.getExchanges();
+        setExchanges(response.data?.items || []);
+      } catch (error) {
+        console.error('获取交易所列表失败:', error);
+      }
+    };
+    
+    fetchExchanges();
+  }, []);
+  
+  // 当买入交易所变化时，加载对应的API密钥
+  useEffect(() => {
+    if (!strategy.buy_exchange) return;
+    
+    const fetchBuyExchangeApiKeys = async () => {
+      setLoadingApiKeys(true);
+      try {
+        // 找到对应的交易所ID
+        const exchange = exchanges.find(e => e.name.toLowerCase() === strategy.buy_exchange.toLowerCase());
+        if (exchange) {
+          const response = await apiKeyApi.getExchangeApiKeys(exchange.id);
+          setBuyExchangeApiKeys(response.data?.items || []);
+        }
+      } catch (error) {
+        console.error('获取买入交易所API密钥失败:', error);
+      } finally {
+        setLoadingApiKeys(false);
+      }
+    };
+    
+    fetchBuyExchangeApiKeys();
+  }, [strategy.buy_exchange, exchanges]);
+  
+  // 当卖出交易所变化时，加载对应的API密钥
+  useEffect(() => {
+    if (!strategy.sell_exchange) return;
+    
+    const fetchSellExchangeApiKeys = async () => {
+      setLoadingApiKeys(true);
+      try {
+        // 找到对应的交易所ID
+        const exchange = exchanges.find(e => e.name.toLowerCase() === strategy.sell_exchange.toLowerCase());
+        if (exchange) {
+          const response = await apiKeyApi.getExchangeApiKeys(exchange.id);
+          setSellExchangeApiKeys(response.data?.items || []);
+        }
+      } catch (error) {
+        console.error('获取卖出交易所API密钥失败:', error);
+      } finally {
+        setLoadingApiKeys(false);
+      }
+    };
+    
+    fetchSellExchangeApiKeys();
+  }, [strategy.sell_exchange, exchanges]);
 
   /**
    * 处理表单提交
@@ -120,7 +198,7 @@ export function StrategyForm({
               <Input 
                 id="buy_exchange" 
                 value={strategy.buy_exchange} 
-                onChange={(e) => setStrategy({...strategy, buy_exchange: e.target.value})}
+                onChange={(e) => setStrategy({...strategy, buy_exchange: e.target.value, buy_exchange_api_key_id: ''})}
                 placeholder="例如: binance" 
               />
             </div>
@@ -129,9 +207,56 @@ export function StrategyForm({
               <Input 
                 id="sell_exchange" 
                 value={strategy.sell_exchange} 
-                onChange={(e) => setStrategy({...strategy, sell_exchange: e.target.value})}
+                onChange={(e) => setStrategy({...strategy, sell_exchange: e.target.value, sell_exchange_api_key_id: ''})}
                 placeholder="例如: bybit" 
               />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="buy_exchange_api_key_id">买入交易所API密钥</Label>
+              <Select
+                value={strategy.buy_exchange_api_key_id}
+                onValueChange={(value) => setStrategy({...strategy, buy_exchange_api_key_id: value})}
+                disabled={loadingApiKeys || buyExchangeApiKeys.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择API密钥" />
+                </SelectTrigger>
+                <SelectContent>
+                  {buyExchangeApiKeys.map((apiKey) => (
+                    <SelectItem key={apiKey.id} value={apiKey.id}>
+                      {apiKey.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {buyExchangeApiKeys.length === 0 && strategy.buy_exchange && (
+                <p className="text-xs text-red-500 mt-1">没有找到{strategy.buy_exchange}的API密钥，请先添加</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sell_exchange_api_key_id">卖出交易所API密钥</Label>
+              <Select
+                value={strategy.sell_exchange_api_key_id}
+                onValueChange={(value) => setStrategy({...strategy, sell_exchange_api_key_id: value})}
+                disabled={loadingApiKeys || sellExchangeApiKeys.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择API密钥" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sellExchangeApiKeys.map((apiKey) => (
+                    <SelectItem key={apiKey.id} value={apiKey.id}>
+                      {apiKey.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {sellExchangeApiKeys.length === 0 && strategy.sell_exchange && (
+                <p className="text-xs text-red-500 mt-1">没有找到{strategy.sell_exchange}的API密钥，请先添加</p>
+              )}
             </div>
           </div>
           

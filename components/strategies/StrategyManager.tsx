@@ -43,7 +43,7 @@ export function StrategyManager() {
     
     try {
       const response = await arbitrageApi.getStrategies();
-      setStrategies(response.data?.records || []);
+      setStrategies(response.data?.items || []);
     } catch (err) {
       console.error('获取策略失败:', err);
       setError('获取策略失败，请稍后重试');

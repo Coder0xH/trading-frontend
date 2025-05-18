@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -17,8 +17,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertTriangleIcon,
-  TrendingUpIcon
+  TrendingUpIcon,
+  Loader2
 } from 'lucide-react';
+
+import arbitrageApi from '@/api/arbitrage';
+import { ArbitrageStrategy } from '@/types/arbitrage';
+import { QuickStrategyForm } from '@/components/strategies/QuickStrategyForm';
 
 /**
  * 模拟套利机会数据
@@ -27,8 +32,8 @@ const mockArbitrageData = [
   {
     id: '1',
     symbol: 'ETH/USDT',
-    buyExchange: 'Binance',
-    sellExchange: 'OKX',
+    buyExchange: 'OKX-DEX',
+    sellExchange: 'BINANCE',
     buyPrice: 3450.25,
     sellPrice: 3520.75,
     priceDifference: 70.5,
@@ -38,10 +43,25 @@ const mockArbitrageData = [
     chain: 'Ethereum',
     withdrawEnabled: true,
     depositEnabled: true,
-    aggregator: 'ODOS',
+    aggregator: 'OKX',
     timestamp: new Date().getTime() - 120000,
   }
 ];
+
+/**
+ * 获取机会状态文本
+ */
+function getOpportunityStatus(opportunity: typeof mockArbitrageData[0]) {
+  if (!opportunity.withdrawEnabled && !opportunity.depositEnabled) {
+    return '冲提受限';
+  } else if (!opportunity.withdrawEnabled) {
+    return '提现受限';
+  } else if (!opportunity.depositEnabled) {
+    return '充值受限';
+  } else {
+    return '正常';
+  }
+}
 
 /**
  * 首页组件
@@ -49,26 +69,74 @@ const mockArbitrageData = [
 export default function Home() {
   // 状态管理
   const [opportunities] = useState(mockArbitrageData);
+  const [strategies, setStrategies] = useState<ArbitrageStrategy[]>([]);
+  const [executingStrategy, setExecutingStrategy] = useState<string | null>(null);
+  const [isQuickFormOpen, setIsQuickFormOpen] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<typeof mockArbitrageData[0] | null>(null);
 
   /**
-   * 获取机会状态文本
-   * @param opportunity - 套利机会对象
-   * @returns 状态文本
+   * 加载套利策略
    */
-  const getOpportunityStatus = (opportunity: typeof mockArbitrageData[0]) => {
-    if (!opportunity.withdrawEnabled && !opportunity.depositEnabled) {
-      return '冲提受限';
-    } else if (!opportunity.withdrawEnabled) {
-      return '提现受限';
-    } else if (!opportunity.depositEnabled) {
-      return '充值受限';
-    } else {
-      return '正常';
+  const fetchStrategies = async () => {
+    try {
+      // 移除了加载状态的设置，因为当前没有在UI中显示加载状态
+      const response = await arbitrageApi.getStrategies();
+      setStrategies(response.data?.items || []);
+    } catch (error) {
+      console.error('获取策略列表失败:', error);
     }
+  };
+  
+  // 组件加载时获取策略列表
+  useEffect(() => {
+    fetchStrategies();
+  }, []);
+
+  /**
+   * 处理套利按钮点击
+   */
+  const handleArbitrage = async (opportunity: typeof mockArbitrageData[0]) => {
+    // 找到匹配的策略（这里简单地根据交易对匹配）
+    const matchedStrategy = strategies.find(strategy =>
+      strategy.symbol === opportunity.symbol
+    );
+
+    if (matchedStrategy) {
+      try {
+        setExecutingStrategy(opportunity.id);
+        await arbitrageApi.executeStrategy(matchedStrategy.id);
+        alert(`已成功执行套利策略: ${matchedStrategy.name}`);
+      } catch (error) {
+        console.error('执行套利策略失败:', error);
+        alert('执行套利策略失败，请稍后重试');
+      } finally {
+        setExecutingStrategy(null);
+      }
+    } else {
+      // 如果没有匹配的策略，打开快速创建表单
+      setSelectedOpportunity(opportunity);
+      setIsQuickFormOpen(true);
+    }
+  };
+  
+  /**
+   * 策略创建成功后的回调
+   */
+  const handleStrategySuccess = async () => {
+    // 重新加载策略列表
+    await fetchStrategies();
   };
 
   return (
     <div className="container py-6 space-y-6">
+      {/* 快速创建策略表单 */}
+      <QuickStrategyForm 
+        isOpen={isQuickFormOpen}
+        onOpenChange={setIsQuickFormOpen}
+        onSuccess={handleStrategySuccess}
+        opportunityData={selectedOpportunity}
+      />
+      
       <div className="flex flex-col space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">套利机会</h1>
@@ -76,7 +144,7 @@ export default function Home() {
             发现并利用不同交易所之间的价格差异获利
           </p>
         </div>
-        
+
         {/* 套利机会列表 - 表格视图 */}
         <Card>
           <CardContent className="p-0">
@@ -131,9 +199,23 @@ export default function Home() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button size="sm" variant="outline">
-                        <TrendingUpIcon className="mr-2 h-4 w-4" />
-                        套利
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleArbitrage(opportunity)}
+                        disabled={executingStrategy === opportunity.id}
+                      >
+                        {executingStrategy === opportunity.id ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            执行中
+                          </>
+                        ) : (
+                          <>
+                            <TrendingUpIcon className="mr-2 h-4 w-4" />
+                            套利
+                          </>
+                        )}
                       </Button>
                     </TableCell>
                   </TableRow>

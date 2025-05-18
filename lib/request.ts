@@ -13,8 +13,9 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
  */
 export interface ApiResponse<T> {
   code: number;
+  msg: string;
+  success: boolean;
   data: T;
-  message: string;
 }
 
 /**
@@ -23,7 +24,7 @@ export interface ApiResponse<T> {
  * @property {Pagination} pagination - 分页信息
  */
 export interface ApiListResponse<T> {
-  records: T[];
+  items: T[];
   pagination: Pagination;
 }
 

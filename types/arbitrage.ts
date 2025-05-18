@@ -5,14 +5,26 @@
  */
 
 /**
+ * 池子大小枚举
+ */
+export enum PoolSize {
+  SMALL = 'small',
+  MEDIUM = 'medium',
+  LARGE = 'large'
+}
+
+/**
  * 套利策略配置接口
  */
 export interface ArbitrageStrategyConfig {
   name: string;
   symbol: string;
   chain_id: string;
+  token_address?: string;
   buy_exchange: string;
   sell_exchange: string;
+  buy_exchange_api_key_id?: string;
+  sell_exchange_api_key_id?: string;
   min_price_diff?: number;
   direction?: ArbitrageDirection;
   min_trade_amount: number;
@@ -30,6 +42,10 @@ export interface ArbitrageStrategyConfig {
   batch_count?: number | null;
   batch_interval?: number | null;
   enabled?: boolean;
+  futures_enabled?: boolean;
+  pool_size?: PoolSize;
+  one_to_one_hedge?: boolean;
+  close_position_together?: boolean;
 }
 
 /**
