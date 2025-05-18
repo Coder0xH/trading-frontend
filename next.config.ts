@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     // 只在开发环境中重写API请求
     if (process.env.NODE_ENV === "development") {
-      const apiUrl = "http://localhost:8000";
+      const apiUrl = "http://13.250.110.158:8000";
       return [
         {
           source: "/api/:path*",
