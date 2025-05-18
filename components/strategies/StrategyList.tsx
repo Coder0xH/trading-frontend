@@ -18,7 +18,7 @@ import {
   BarChart3Icon,
   CheckCircleIcon,
 } from 'lucide-react';
-import { ArbitrageStrategy, ArbitrageDirection } from '@/services/arbitrageApi';
+import { ArbitrageStrategy, ArbitrageDirection } from '@/types/arbitrage';
 
 interface StrategyListProps {
   readonly strategies: ArbitrageStrategy[];

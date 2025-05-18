@@ -18,6 +18,16 @@ export interface ApiResponse<T> {
 }
 
 /**
+ * 列表响应接口
+ * @property {T[]} records - 列表数据
+ * @property {Pagination} pagination - 分页信息
+ */
+export interface ApiListResponse<T> {
+  records: T[];
+  pagination: Pagination;
+}
+
+/**
  * 分页响应接口
  * @property {string} total - 总记录数
  * @property {string} size - 每页记录数
@@ -29,30 +39,6 @@ export interface Pagination {
   size: string;
   current: string;
   pages: string;
-}
-
-/**
- * 公共分页参数接口
- * @property {number} pageNum - 页码
- * @property {number} pageSize - 每页记录数
- * @property {string} sortField - 排序字段
- * @property {boolean} sortMode - 排序方式 true: 升序 false: 降序
- */
-export interface PaginationParams {
-  pageNum: number;
-  pageSize: number;
-  sortField: string;
-  sortMode: boolean;
-}
-
-/**
- * 列表响应接口
- * @property {T[]} records - 列表数据
- * @property {Pagination} pagination - 分页信息
- */
-export interface ApiListResponse<T> {
-  records: T[];
-  pagination: Pagination;
 }
 
 /**

@@ -14,10 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { 
   ArbitrageStrategyConfig,
-  ArbitrageDirection,
-  createArbitrageStrategy,
-  updateArbitrageStrategy
-} from '@/services/arbitrageApi';
+  ArbitrageDirection
+} from '@/types/arbitrage';
+import arbitrageApi from '@/api/arbitrage';
 
 interface StrategyFormProps {
   isOpen: boolean;
@@ -52,10 +51,10 @@ export function StrategyForm({
       setError(null);
       
       if (isEditing && editingStrategyId) {
-        await updateArbitrageStrategy(editingStrategyId, strategy);
+        await arbitrageApi.updateStrategy(editingStrategyId, strategy);
         alert('策略更新成功！');
       } else {
-        await createArbitrageStrategy(strategy);
+        await arbitrageApi.createStrategy(strategy);
         alert('策略创建成功！');
       }
       

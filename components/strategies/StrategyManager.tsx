@@ -12,11 +12,9 @@ import { Button } from "@/components/ui/button";
 import { PlusIcon } from 'lucide-react';
 import { 
   ArbitrageStrategy, 
-  ArbitrageStrategyConfig,
-  listArbitrageStrategies, 
-  executeArbitrageStrategy,
-  deleteArbitrageStrategy,
-} from '@/services/arbitrageApi';
+  ArbitrageStrategyConfig
+} from '@/types/arbitrage';
+import arbitrageApi from '@/api/arbitrage';
 import { StrategyForm } from './StrategyForm';
 import { StrategyList } from './StrategyList';
 import { EmptyState, getDefaultStrategyConfig } from './EmptyState';
@@ -44,8 +42,8 @@ export function StrategyManager() {
     setError(null);
     
     try {
-      const data = await listArbitrageStrategies();
-      setStrategies(data);
+      const response = await arbitrageApi.getStrategies();
+      setStrategies(response.data?.records || []);
     } catch (err) {
       console.error('获取策略失败:', err);
       setError('获取策略失败，请稍后重试');
@@ -110,7 +108,7 @@ export function StrategyManager() {
    */
   const handleExecuteStrategy = async (id: string) => {
     try {
-      await executeArbitrageStrategy(id);
+      await arbitrageApi.executeStrategy(id);
       await fetchStrategies();
       alert('策略执行已触发');
     } catch (err) {
@@ -126,7 +124,7 @@ export function StrategyManager() {
     if (!confirm('确定要删除此策略吗？此操作不可撤销。')) return;
     
     try {
-      await deleteArbitrageStrategy(id);
+      await arbitrageApi.deleteStrategy(id);
       await fetchStrategies();
       alert('策略已删除');
     } catch (err) {

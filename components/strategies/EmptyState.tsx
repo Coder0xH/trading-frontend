@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from 'lucide-react';
-import { ArbitrageStrategyConfig, ArbitrageDirection, TradeMode, HedgeType } from '@/services/arbitrageApi';
+import { ArbitrageDirection, TradeMode, HedgeType, ArbitrageStrategyConfig } from '@/types/arbitrage';
 
 interface EmptyStateProps {
   readonly onCreateNew: () => void;

@@ -47,75 +47,7 @@ const mockArbitrageData = [
     depositEnabled: true,
     aggregator: 'ODOS',
     timestamp: new Date().getTime() - 120000,
-  },
-  {
-    id: '2',
-    symbol: 'BTC/USDT',
-    buyExchange: 'Bitget',
-    sellExchange: 'Binance',
-    buyPrice: 63250.50,
-    sellPrice: 63750.25,
-    priceDifference: 499.75,
-    priceDifferencePercentage: 0.79,
-    volume24h: 3500000,
-    poolSize: 25000000,
-    chain: 'Bitcoin',
-    withdrawEnabled: true,
-    depositEnabled: true,
-    aggregator: 'ODOS',
-    timestamp: new Date().getTime() - 180000,
-  },
-  {
-    id: '3',
-    symbol: 'SOL/USDT',
-    buyExchange: 'OKX',
-    sellExchange: 'Binance',
-    buyPrice: 142.25,
-    sellPrice: 145.50,
-    priceDifference: 3.25,
-    priceDifferencePercentage: 2.28,
-    volume24h: 850000,
-    poolSize: 3200000,
-    chain: 'Solana',
-    withdrawEnabled: false,
-    depositEnabled: true,
-    aggregator: '待定',
-    timestamp: new Date().getTime() - 60000,
-  },
-  {
-    id: '4',
-    symbol: 'AVAX/USDT',
-    buyExchange: 'Binance',
-    sellExchange: 'Bitget',
-    buyPrice: 28.75,
-    sellPrice: 29.45,
-    priceDifference: 0.70,
-    priceDifferencePercentage: 2.43,
-    volume24h: 420000,
-    poolSize: 1800000,
-    chain: 'Avalanche',
-    withdrawEnabled: true,
-    depositEnabled: true,
-    aggregator: 'ODOS',
-    timestamp: new Date().getTime() - 240000,
-  },
-  {
-    id: '5',
-    symbol: 'LINK/USDT',
-    buyExchange: 'Bitget',
-    sellExchange: 'OKX',
-    buyPrice: 15.25,
-    sellPrice: 15.55,
-    priceDifference: 0.30,
-    priceDifferencePercentage: 1.97,
-    volume24h: 320000,
-    poolSize: 950000,
-    chain: 'Ethereum',
-    withdrawEnabled: true,
-    depositEnabled: false,
-    aggregator: 'ODOS',
-    timestamp: new Date().getTime() - 300000,
-  },
+  }
 ];
 
 /**
@@ -258,22 +190,36 @@ export function ArbitrageOpportunities() {
                     <TableCell className="text-right">${(opportunity.poolSize / 1000000).toFixed(2)}M</TableCell>
                     <TableCell>{opportunity.chain}</TableCell>
                     <TableCell>
-                      {(!opportunity.withdrawEnabled || !opportunity.depositEnabled) ? (
-                        <Badge variant="destructive" className="flex items-center gap-1">
-                          <AlertTriangleIcon className="h-3 w-3" />
-                          <span>
-                            {!opportunity.withdrawEnabled && !opportunity.depositEnabled 
-                              ? '冲提受限' 
-                              : !opportunity.withdrawEnabled 
-                                ? '提现受限' 
-                                : '充值受限'}
-                          </span>
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
-                          正常
-                        </Badge>
-                      )}
+                      {(() => {
+                        // 提取嵌套三元运算符为独立函数
+                        const getStatusText = (withdrawEnabled: boolean, depositEnabled: boolean) => {
+                          if (!withdrawEnabled && !depositEnabled) {
+                            return '冲提受限'; // 冲提受限
+                          } else if (!withdrawEnabled) {
+                            return '提现受限'; // 提现受限
+                          } else if (!depositEnabled) {
+                            return '充值受限'; // 充值受限
+                          }
+                          return '正常'; // 正常
+                        };
+                        
+                        if (!opportunity.withdrawEnabled || !opportunity.depositEnabled) {
+                          return (
+                            <Badge variant="destructive" className="flex items-center gap-1">
+                              <AlertTriangleIcon className="h-3 w-3" />
+                              <span>
+                                {getStatusText(opportunity.withdrawEnabled, opportunity.depositEnabled)}
+                              </span>
+                            </Badge>
+                          );
+                        } else {
+                          return (
+                            <Badge variant="outline" className="bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
+                              正常
+                            </Badge>
+                          );
+                        }
+                      })()}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button size="sm" variant="outline">
