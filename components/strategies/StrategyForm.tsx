@@ -50,9 +50,9 @@ export function StrategyForm({
   initialValues
 }: Readonly<StrategyFormProps>) {
   const [strategy, setStrategy] = useState<ArbitrageStrategyConfig & {
-    buy_exchange_api_key_id?: string;
-    sell_exchange_api_key_id?: string;
-  }>({...initialValues, buy_exchange_api_key_id: '', sell_exchange_api_key_id: ''});
+    buy_exchange_api_key_id?: number;
+    sell_exchange_api_key_id?: number;
+  }>({...initialValues, buy_exchange_api_key_id: undefined, sell_exchange_api_key_id: undefined});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
@@ -198,7 +198,7 @@ export function StrategyForm({
               <Input 
                 id="buy_exchange" 
                 value={strategy.buy_exchange} 
-                onChange={(e) => setStrategy({...strategy, buy_exchange: e.target.value, buy_exchange_api_key_id: ''})}
+                onChange={(e) => setStrategy({...strategy, buy_exchange: e.target.value, buy_exchange_api_key_id: undefined})}
                 placeholder="例如: binance" 
               />
             </div>
@@ -207,7 +207,7 @@ export function StrategyForm({
               <Input 
                 id="sell_exchange" 
                 value={strategy.sell_exchange} 
-                onChange={(e) => setStrategy({...strategy, sell_exchange: e.target.value, sell_exchange_api_key_id: ''})}
+                onChange={(e) => setStrategy({...strategy, sell_exchange: e.target.value, sell_exchange_api_key_id: undefined})}
                 placeholder="例如: bybit" 
               />
             </div>
@@ -217,8 +217,8 @@ export function StrategyForm({
             <div className="space-y-2">
               <Label htmlFor="buy_exchange_api_key_id">买入交易所API密钥</Label>
               <Select
-                value={strategy.buy_exchange_api_key_id}
-                onValueChange={(value) => setStrategy({...strategy, buy_exchange_api_key_id: value})}
+                value={strategy.buy_exchange_api_key_id ? String(strategy.buy_exchange_api_key_id) : undefined}
+                onValueChange={(value) => setStrategy({...strategy, buy_exchange_api_key_id: value ? Number(value) : undefined})}
                 disabled={loadingApiKeys || buyExchangeApiKeys.length === 0}
               >
                 <SelectTrigger>
@@ -239,8 +239,8 @@ export function StrategyForm({
             <div className="space-y-2">
               <Label htmlFor="sell_exchange_api_key_id">卖出交易所API密钥</Label>
               <Select
-                value={strategy.sell_exchange_api_key_id}
-                onValueChange={(value) => setStrategy({...strategy, sell_exchange_api_key_id: value})}
+                value={strategy.sell_exchange_api_key_id ? String(strategy.sell_exchange_api_key_id) : undefined}
+                onValueChange={(value) => setStrategy({...strategy, sell_exchange_api_key_id: value ? Number(value) : undefined})}
                 disabled={loadingApiKeys || sellExchangeApiKeys.length === 0}
               >
                 <SelectTrigger>
