@@ -66,7 +66,7 @@ const getBaseUrl = () => {
   // 如果在服务器端运行
   if (typeof window === "undefined") {
     // 在服务器端使用完整的 URL
-    return "https://13.250.110.158:8000";
+    return "http://13.250.110.158:8000";
   }
   // 在客户端使用相对路径，让 rewrites 生效
   return "/api";
