@@ -40,10 +40,26 @@ const nextConfig: NextConfig = {
   // 重写请求地址
   async rewrites() {
     // 获取API URL，优先使用环境变量
-    // const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://13.250.110.158:8000";
-    const apiUrl = "http://13.250.110.158:8000";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://13.250.110.158:8000";
     
-    // 在所有环境中重写API请求
+    // 在生产环境中使用不同的rewrites配置
+    if (process.env.VERCEL) {
+      console.log('在Vercel上运行，使用特殊的rewrites配置');
+      return [
+        {
+          source: "/api/:path*",
+          destination: `${apiUrl}/api/:path*`,
+          // 添加自定义头信息来解决可能的CORS问题
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+            "Access-Control-Allow-Headers": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+          },
+        },
+      ];
+    }
+    
+    // 在开发环境中使用标准rewrites配置
     return [
       {
         source: "/api/:path*",
