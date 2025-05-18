@@ -41,7 +41,8 @@ const nextConfig: NextConfig = {
   // 重写请求地址
   async rewrites() {
     // 获取API URL，优先使用环境变量
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://13.250.110.158:8000";
+    // const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://13.250.110.158:8000";
+    const apiUrl = "http://13.250.110.158:8000";
     
     console.log(`当前环境: ${process.env.NODE_ENV}, API URL: ${apiUrl}`);
     
