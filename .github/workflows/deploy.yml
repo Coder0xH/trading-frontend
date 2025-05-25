@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: coderdexter/trading-backend
+  IMAGE_NAME: coderdexter/trading-frontend
 
 jobs:
   build-and-push:

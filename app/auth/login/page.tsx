@@ -57,7 +57,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const response = await authApi.login(data.username, data.password);
+      const response = await authApi.login(data.username, data.password, data.totpCode);
 
       if (response.data.requires_totp) {
         setRequiresTotp(true);
