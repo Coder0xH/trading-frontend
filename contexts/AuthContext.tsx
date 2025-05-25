@@ -53,9 +53,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // 登录方法
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string, totpCode?: string) => {
     try {
-      const response = await authApi.login(username, password);
+      const response = await authApi.login(username, password, totpCode);
       
       // 如果不需要TOTP验证，获取用户信息
       if (!response.data.requires_totp) {

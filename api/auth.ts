@@ -30,18 +30,18 @@ export const authApi = {
    * @param password 密码
    * @returns 登录结果
    */
-  login: async (username: string, password: string) => {
-    return request.post<LoginResponse>('/auth/login', { username, password });
+  login: async (username: string, password: string, totpCode?: string) => {
+    return request.post<LoginResponse>('/auth/login', { username, password, totp_code: totpCode });
   },
 
   /**
    * TOTP验证登录
    * @param username 用户名
-   * @param totp_code TOTP验证码
+   * @param totpCode TOTP验证码
    * @returns 登录结果
    */
-  verifyTotp: async (username: string, totp_code: string) => {
-    return request.post<LoginResponse>('/auth/login/totp', { username, totp_code });
+  verifyTotp: async (username: string, totpCode: string) => {
+    return request.post<LoginResponse>('/auth/login/totp', { username, totp_code: totpCode });
   },
 
   /**

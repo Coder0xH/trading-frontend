@@ -20,6 +20,7 @@ import { useToast } from "@/components/ui/use-toast";
 const loginSchema = z.object({
   username: z.string().min(3, "用户名至少需要3个字符").max(50, "用户名不能超过50个字符"),
   password: z.string().min(8, "密码至少需要8个字符"),
+  totpCode: z.string().min(6, "TOTP验证码必须是6位数字").max(6, "TOTP验证码必须是6位数字").optional(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -30,7 +31,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [requiresTotp, setRequiresTotp] = useState(false);
-  const [totpCode, setTotpCode] = useState("");
 
   // 获取URL中的回调地址
   const [callbackUrl, setCallbackUrl] = useState("/");
@@ -83,44 +83,6 @@ export default function LoginPage() {
       
       toast({
         title: "登录失败",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 处理TOTP验证
-  const handleTotpSubmit = async () => {
-    if (totpCode.length !== 6) {
-      toast({
-        title: "验证码错误",
-        description: "TOTP验证码必须是6位数字",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await authApi.verifyTotp(form.getValues("username"), totpCode);
-
-      toast({
-        title: "验证成功",
-        description: "欢迎回来！",
-        variant: "default",
-      });
-      router.push(callbackUrl);
-    } catch (error) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response && error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data) 
-          ? String(error.response.data.detail) 
-          : "验证码无效";
-      
-      toast({
-        title: "验证失败",
         description: errorMessage,
         variant: "destructive",
       });
@@ -183,7 +145,6 @@ export default function LoginPage() {
 
           {/* 表单 */}
           <CardContent className="space-y-4">
-            {!requiresTotp ? (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
@@ -240,6 +201,39 @@ export default function LoginPage() {
                       </FormItem>
                     )}
                   />
+                                    <FormField
+                    control={form.control}
+                    name="totpCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>TOTP验证码</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                            <Input
+                              type="text"
+                              placeholder="请输入6位TOTP验证码"
+                              className="pl-10"
+                              disabled={isLoading}
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-5 w-5" />
+                              ) : (
+                                <Eye className="h-5 w-5" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <Button
                     type="submit"
                     className="w-full bg-blue-600 hover:bg-blue-700 transition-all duration-300"
@@ -261,60 +255,6 @@ export default function LoginPage() {
                   </Button>
                 </form>
               </Form>
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <FormLabel>TOTP验证码</FormLabel>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      placeholder="请输入6位TOTP验证码"
-                      className="pl-10 text-center tracking-widest text-lg"
-                      value={totpCode}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
-                        setTotpCode(value);
-                      }}
-                      disabled={isLoading}
-                      maxLength={6}
-                    />
-                  </div>
-                </div>
-                <Button
-                  onClick={handleTotpSubmit}
-                  className="w-full bg-blue-600 hover:bg-blue-700 transition-all duration-300"
-                  disabled={isLoading || totpCode.length !== 6}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 验证中...
-                    </>
-                  ) : (
-                    <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      验证
-                    </motion.span>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full border-gray-200 hover:bg-gray-100 transition-all duration-300"
-                  onClick={() => setRequiresTotp(false)}
-                  disabled={isLoading}
-                >
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    返回
-                  </motion.span>
-                </Button>
-              </div>
-            )}
           </CardContent>
 
           {/* 底部 */}
