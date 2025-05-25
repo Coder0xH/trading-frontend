@@ -69,7 +69,6 @@ export function ExchangeSection({
    * @param apiKeys API密钥列表
    * @param isBuyExchange 是否为买入交易所
    */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const updateApiKeyState = useCallback((apiKeys: ApiKey[], isBuyExchange: boolean) => {
     console.log(`更新${isBuyExchange ? '买入' : '卖出'}交易所API密钥:`, apiKeys);
     console.log('密钥数据结构:', JSON.stringify(apiKeys[0] || {}, null, 2));
@@ -87,7 +86,7 @@ export function ExchangeSection({
     if (error?.includes('API密钥')) {
       setError(null);
     }
-  }, []); // 有意忽略error依赖，因为它会导致循环依赖问题
+  }, [error]); // 添加error作为依赖项
   
   /**
    * 获取交易所的API密钥列表
@@ -120,7 +119,7 @@ export function ExchangeSection({
     } finally {
       setLoadingApiKeys(false);
     }
-  }, [updateApiKeyState]); // 移除error依赖，因为这会导致循环调用
+  }, [updateApiKeyState, error]); // 添加error作为依赖项
   
   /**
    * 获取交易所列表

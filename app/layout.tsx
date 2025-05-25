@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
-import { Header } from "@/components/layout/Header";
-import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { LayoutContent } from "@/components/layout/LayoutContent";
 
 import "./globals.css";
 
@@ -20,15 +20,13 @@ export default function RootLayout({
   return (
     <html lang="zh" suppressHydrationWarning>
       <body className={cn(
-        "min-h-screen bg-gradient-to-b from-background/70 to-background bg-fixed",
+        "min-h-screen",
         "antialiased font-sans",
         inter.className
       )}>
-        <div className="relative flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1 p-6 pt-20 md:p-8 md:pt-20">{children}</main>
-          <Toaster />
-        </div>
+        <AuthProvider>
+          <LayoutContent>{children}</LayoutContent>
+        </AuthProvider>
       </body>
     </html>
   );
