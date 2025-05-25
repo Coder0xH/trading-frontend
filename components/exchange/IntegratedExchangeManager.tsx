@@ -66,19 +66,20 @@ export function IntegratedExchangeManager({
   // 所有状态和方法都已经移到useExchangeManager hook中
   
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <div className="space-y-4 md:space-y-6">
+      <Card className="overflow-hidden">
+        <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between pb-2 gap-4">
           <div>
-            <CardTitle className="text-2xl">交易所设置</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl md:text-2xl">交易所设置</CardTitle>
+            <CardDescription className="text-sm">
               管理您的交易所平台，API密钥和配置
             </CardDescription>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
             <Button 
               variant="outline" 
               size="sm" 
+              className="flex-1 md:flex-none justify-center"
               onClick={() => refreshData()}
               disabled={isLoading}
             >
@@ -87,6 +88,7 @@ export function IntegratedExchangeManager({
             </Button>
             <Button 
               size="sm" 
+              className="flex-1 md:flex-none justify-center"
               onClick={openAddExchangeForm}
               disabled={isLoading}
             >
@@ -96,30 +98,34 @@ export function IntegratedExchangeManager({
           </div>
         </CardHeader>
         
-        <CardContent>
+        <CardContent className="px-4 md:px-6">
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm md:text-base">
               {error}
             </div>
           )}
           
           {/* 加载状态 */}
           {isLoading && exchanges.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              加载中...
+            <div className="text-center py-6 md:py-8 text-muted-foreground">
+              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+              <p>加载中...</p>
             </div>
           )}
           
           {/* 空状态 */}
           {!isLoading && exchanges.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              暂无交易所，点击上方&quot;添加交易所&quot;按钮添加
+            <div className="text-center py-6 md:py-8 text-muted-foreground">
+              <div className="rounded-full bg-muted w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                <PlusIcon className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p>暂无交易所，点击上方“添加交易所”按钮添加</p>
             </div>
           )}
           
           {/* 交易所列表 */}
           {exchanges.length > 0 && (
-            <div>
+            <div className="space-y-4">
               {exchanges.map((exchange) => (
                 <ExchangeCard 
                   key={exchange.id}

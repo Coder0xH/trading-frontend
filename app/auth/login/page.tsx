@@ -92,7 +92,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex h-screen w-full items-center justify-center overflow-hidden">
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-6 md:px-0">
       {/* 背景图片容器 */}
       <div
         className="absolute inset-0 w-full h-full"
@@ -110,22 +110,22 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md z-10"
+        className="w-full max-w-sm md:max-w-md z-10"
       >
 
         {/* 登录表单 */}
-        <Card className="border-none bg-white shadow-2xl rounded-xl overflow-hidden">
+        <Card className="border-none bg-white shadow-2xl rounded-xl overflow-hidden w-full">
 
           {/* 头部 */}
           <CardHeader className="space-y-1 pb-2">
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-2 md:mb-4">
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
                 className="relative"
               >
-                <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
                   <div className="relative z-10 flex items-center justify-center w-full h-full">
                     {requiresTotp ? (
                       <ShieldCheck className="h-10 w-10 text-white" />
@@ -137,16 +137,16 @@ export default function LoginPage() {
 
               </motion.div>
             </div>
-            <CardTitle className="text-2xl text-center font-bold text-blue-600">加密货币套利平台</CardTitle>
+            <CardTitle className="text-xl md:text-2xl text-center font-bold text-blue-600">加密货币套利平台</CardTitle>
             <CardDescription className="text-center">
               {requiresTotp ? "请输入您的TOTP验证码完成登录" : "请输入您的账户信息登录"}
             </CardDescription>
           </CardHeader>
 
           {/* 表单 */}
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 md:space-y-4 px-4 md:px-6">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 md:space-y-4">
                   <FormField
                     control={form.control}
                     name="username"
@@ -201,7 +201,7 @@ export default function LoginPage() {
                       </FormItem>
                     )}
                   />
-                                    <FormField
+                  <FormField
                     control={form.control}
                     name="totpCode"
                     render={({ field }) => (
@@ -214,20 +214,12 @@ export default function LoginPage() {
                               type="text"
                               placeholder="请输入6位TOTP验证码"
                               className="pl-10"
+                              maxLength={6}
+                              inputMode="numeric"
+                              pattern="[0-9]*"
                               disabled={isLoading}
                               {...field}
                             />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-5 w-5" />
-                              ) : (
-                                <Eye className="h-5 w-5" />
-                              )}
-                            </button>
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -258,7 +250,7 @@ export default function LoginPage() {
           </CardContent>
 
           {/* 底部 */}
-          <CardFooter className="flex flex-col space-y-4 pt-2">
+          <CardFooter className="flex flex-col space-y-3 md:space-y-4 pt-2 px-4 md:px-6 pb-4">
             <div className="relative w-full">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-gray-200" />
