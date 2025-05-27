@@ -94,7 +94,7 @@ export default function LoginPage() {
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-6 md:px-0">
       {/* 背景图片容器 */}
-      <div
+      {/* <div
         className="absolute inset-0 w-full h-full"
         style={{
           backgroundImage: 'url("/backg.png")',
@@ -103,7 +103,7 @@ export default function LoginPage() {
           backgroundRepeat: "no-repeat",
           opacity: 0.3,
         }}
-      />
+      /> */}
 
       {/* 登录表单 */}
       <motion.div

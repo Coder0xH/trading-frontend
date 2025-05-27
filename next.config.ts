@@ -13,8 +13,8 @@ const nextConfig: NextConfig = {
 
   // 配置构建优化
   compiler: {
-    // 移除 console.log
-    // removeConsole: process.env.NODE_ENV === 'production',
+    // 移除 线上环境的 console.log
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 
   // 添加安全头配置
@@ -39,11 +39,21 @@ const nextConfig: NextConfig = {
 
   // 重写请求地址
   async rewrites() {
-    // 获取API URL，优先使用环境变量
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://13.250.110.158:8000";
-    // const apiUrl = "http://13.250.110.158:8000";
+    // 根据环境变量选择API URL
+    let apiUrl;
     
-    // 在所有环境中重写API请求
+    // 在生产环境中使用 PROD_API_URL
+    if (process.env.NODE_ENV === 'production') {
+      apiUrl = process.env.PROD_API_URL || 'http://13.250.110.158:8000';
+      console.log('Using production API URL:', apiUrl);
+    } 
+    // 在开发环境中使用 DEV_API_URL
+    else {
+      apiUrl = process.env.DEV_API_URL || 'http://localhost:8000';
+      console.log('Using development API URL:', apiUrl);
+    }
+    
+    // 重写API请求
     return [
       {
         source: "/api/:path*",
