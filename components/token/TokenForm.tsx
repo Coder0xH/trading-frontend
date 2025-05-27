@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TokenFormBasicInfo } from './TokenFormBasicInfo';
 import { TokenFormPermissions } from './TokenFormPermissions';
 import { ContractAddressInput } from './ContractAddressInput';
+import { TokenCreateParams, TokenUpdateParams, BinanceTokenResponse } from '@/types/token';
 
 /**
  * 合约地址类型定义
@@ -18,53 +19,6 @@ import { ContractAddressInput } from './ContractAddressInput';
 type ContractAddress = {
   network: string;
   address: string;
-};
-
-/**
- * 创建代币参数类型
- */
-type TokenCreateParams = {
-  coin: string;
-  name?: string;
-  exchange: string;
-  is_legal_money: boolean;
-  trading: boolean;
-  deposit_all_enable: boolean;
-  withdraw_all_enable: boolean;
-  usdt_trading_pair?: string;
-  has_contract_address: boolean;
-  contract_addresses: ContractAddress[];
-};
-
-/**
- * 更新代币参数类型
- */
-type TokenUpdateParams = {
-  name?: string;
-  exchange: string;
-  is_legal_money: boolean;
-  trading: boolean;
-  deposit_all_enable: boolean;
-  withdraw_all_enable: boolean;
-  usdt_trading_pair?: string;
-  has_contract_address: boolean;
-  contract_addresses: ContractAddress[];
-};
-
-/**
- * 币安代币响应类型
- */
-type BinanceTokenResponse = {
-  coin?: string;
-  name?: string;
-  exchange?: string;
-  is_legal_money?: boolean;
-  trading?: boolean;
-  deposit_all_enable?: boolean;
-  withdraw_all_enable?: boolean;
-  usdt_trading_pair?: string;
-  has_contract_address?: boolean;
-  contract_addresses?: ContractAddress[];
 };
 
 /**
@@ -80,16 +34,14 @@ const createTokenSchema = z.object({
   withdraw_all_enable: z.boolean().default(true),
   usdt_trading_pair: z.string().optional(),
   has_contract_address: z.boolean().default(false),
-  contract_addresses: z.array(z.object({
-    network: z.string(),
-    address: z.string()
-  })).default([]),
+  contract_addresses: z.record(z.string(), z.string()).default({}),
 });
 
 /**
  * 更新代币表单验证模式
  */
 const updateTokenSchema = z.object({
+  coin: z.string().optional(), // 编辑时coin字段可选
   name: z.string().optional(),
   exchange: z.string().default('binance'),
   is_legal_money: z.boolean().default(false),
@@ -98,10 +50,7 @@ const updateTokenSchema = z.object({
   withdraw_all_enable: z.boolean().default(true),
   usdt_trading_pair: z.string().optional(),
   has_contract_address: z.boolean().default(false),
-  contract_addresses: z.array(z.object({
-    network: z.string(),
-    address: z.string()
-  })).default([]),
+  contract_addresses: z.record(z.string(), z.string()).default({}),
 });
 
 /**
@@ -113,6 +62,22 @@ type CreateTokenFormValues = z.infer<typeof createTokenSchema>;
  * 更新代币表单值类型
  */
 type UpdateTokenFormValues = z.infer<typeof updateTokenSchema>;
+
+/**
+ * 通用表单值类型 - 包含所有可能的字段
+ */
+type TokenFormValues = {
+  coin?: string;
+  name?: string;
+  exchange: string;
+  is_legal_money: boolean;
+  trading: boolean;
+  deposit_all_enable: boolean;
+  withdraw_all_enable: boolean;
+  usdt_trading_pair?: string;
+  has_contract_address: boolean;
+  contract_addresses: Record<string, string>;
+};
 
 /**
  * 代币表单基础属性接口
@@ -149,7 +114,8 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
   const [contractAddresses, setContractAddresses] = useState<ContractAddress[]>([]);
   
   // 创建模式的表单
-  const createForm = useForm({
+  const createForm = useForm<CreateTokenFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(createTokenSchema) as any,
     defaultValues: {
       coin: '',
@@ -161,12 +127,13 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
       withdraw_all_enable: true,
       usdt_trading_pair: '',
       has_contract_address: false,
-      contract_addresses: [],
+      contract_addresses: {},
     },
   });
 
   // 编辑模式的表单
-  const updateForm = useForm({
+  const updateForm = useForm<UpdateTokenFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(updateTokenSchema) as any,
     defaultValues: {
       name: '',
@@ -177,7 +144,7 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
       withdraw_all_enable: true,
       usdt_trading_pair: '',
       has_contract_address: false,
-      contract_addresses: [],
+      contract_addresses: {},
     },
   });
 
@@ -194,12 +161,16 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
         withdraw_all_enable: token.withdraw_all_enable || true,
         usdt_trading_pair: token.usdt_trading_pair || '',
         has_contract_address: token.has_contract_address || false,
-        contract_addresses: (token.contract_addresses || []) as any,
+        contract_addresses: (token.contract_addresses || {}),
       });
       
-      // 初始化合约地址
-      if (token.contract_addresses && token.contract_addresses.length > 0) {
-        setContractAddresses(token.contract_addresses);
+      // 初始化合约地址 - 将Record<string, string>转换为ContractAddress[]
+      if (token.contract_addresses && typeof token.contract_addresses === 'object') {
+        const addressArray = Object.entries(token.contract_addresses).map(([network, address]) => ({
+          network,
+          address
+        }));
+        setContractAddresses(addressArray);
       }
     }
   }, [isEditMode, props, updateForm]);
@@ -210,10 +181,16 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
    */
   const handleContractAddressesChange = (addresses: ContractAddress[]) => {
     setContractAddresses(addresses);
+    // 将数组格式转换为Record<string, string>格式
+    const contractAddressesRecord = addresses.reduce((acc, addr) => {
+      acc[addr.network] = addr.address;
+      return acc;
+    }, {} as Record<string, string>);
+    
     if (isEditMode) {
-      updateForm.setValue('contract_addresses', addresses as any);
+      updateForm.setValue('contract_addresses', contractAddressesRecord);
     } else {
-      createForm.setValue('contract_addresses', addresses as any);
+      createForm.setValue('contract_addresses', contractAddressesRecord);
     }
   };
 
@@ -221,9 +198,15 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
    * 处理创建表单提交
    * @param values 表单值
    */
-  const handleCreateSubmit = async (values: CreateTokenFormValues) => {
+  const handleCreateSubmit = async (values: TokenFormValues) => {
+    // 将数组格式转换为Record<string, string>格式
+    const contractAddressesRecord = contractAddresses.reduce((acc, addr) => {
+      acc[addr.network] = addr.address;
+      return acc;
+    }, {} as Record<string, string>);
+    
     const formData: TokenCreateParams = {
-      coin: values.coin,
+      coin: values.coin!,
       name: values.name,
       exchange: values.exchange,
       is_legal_money: values.is_legal_money,
@@ -232,19 +215,25 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
       withdraw_all_enable: values.withdraw_all_enable,
       usdt_trading_pair: values.usdt_trading_pair,
       has_contract_address: values.has_contract_address,
-      contract_addresses: values.has_contract_address ? contractAddresses : [],
+      contract_addresses: contractAddressesRecord,
     };
-    if (!isEditMode) {
-      await (props as CreateTokenFormProps).onSubmit(formData);
-    }
+    
+    await (props as CreateTokenFormProps).onSubmit(formData);
   };
 
   /**
    * 处理更新表单提交
    * @param values 表单值
    */
-  const handleUpdateSubmit = async (values: UpdateTokenFormValues) => {
+  const handleUpdateSubmit = async (values: TokenFormValues) => {
+    // 将数组格式转换为Record<string, string>格式
+    const contractAddressesRecord = contractAddresses.reduce((acc, addr) => {
+      acc[addr.network] = addr.address;
+      return acc;
+    }, {} as Record<string, string>);
+    
     const formData: TokenUpdateParams = {
+      coin: values.coin!,
       name: values.name,
       exchange: values.exchange,
       is_legal_money: values.is_legal_money,
@@ -253,11 +242,10 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
       withdraw_all_enable: values.withdraw_all_enable,
       usdt_trading_pair: values.usdt_trading_pair,
       has_contract_address: values.has_contract_address,
-      contract_addresses: values.has_contract_address ? contractAddresses : [],
+      contract_addresses: contractAddressesRecord,
     };
-    if (isEditMode) {
-      await (props as UpdateTokenFormProps).onSubmit(formData);
-    }
+    
+    await (props as UpdateTokenFormProps).onSubmit(formData);
   };
 
   // 当前使用的表单
@@ -266,7 +254,7 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
   // 监听合约地址复选框变化
   useEffect(() => {
     // 使用回调函数监听表单变化
-    const subscription = form.watch((value: any) => {
+    const subscription = form.watch((value) => {
       if (value && value.has_contract_address && activeTab !== 'contract') {
         setActiveTab('contract');
       }
@@ -275,14 +263,14 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
     // 清理函数
     return () => {
       // 安全地检查subscription是否有unsubscribe方法
-      if (subscription && typeof (subscription as any).unsubscribe === 'function') {
-        (subscription as any).unsubscribe();
+      if (subscription && 'unsubscribe' in subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
       }
     };
   }, [activeTab, form]);
 
   // 创建表单提交处理函数
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: CreateTokenFormValues | UpdateTokenFormValues) => {
     if (isEditMode) {
       return handleUpdateSubmit(data as UpdateTokenFormValues);
     } else {
@@ -291,6 +279,7 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
   };
 
   return (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     <Form {...(form as any)}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <Card>
@@ -302,26 +291,19 @@ export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="basic">基本信息</TabsTrigger>
                 <TabsTrigger value="permissions">权限设置</TabsTrigger>
-                <TabsTrigger 
-                  value="contract" 
-                  disabled={!form.getValues()?.has_contract_address}
-                >
-                  合约地址
-                </TabsTrigger>
+                <TabsTrigger value="contract">合约地址</TabsTrigger>
               </TabsList>
               
               <TabsContent value="basic" className="space-y-4 pt-4">
-                {/* 使用as any强制类型转换，解决不同表单类型之间的兼容性问题 */}
                 <TokenFormBasicInfo 
-                  form={form as any} 
+                  form={form} 
                   isEditMode={isEditMode} 
                 />
               </TabsContent>
               
               <TabsContent value="permissions" className="space-y-4 pt-4">
-                {/* 使用as any强制类型转换，解决不同表单类型之间的兼容性问题 */}
                 <TokenFormPermissions 
-                  form={form as any} 
+                  form={form} 
                 />
               </TabsContent>
               

@@ -12,6 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 
 interface TokenFormBasicInfoProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: UseFormReturn<any>;
   isEditMode: boolean;
 }

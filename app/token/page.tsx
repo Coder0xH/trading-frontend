@@ -172,7 +172,6 @@ function TokenPageContent() {
       {/* 创建代币对话框 */}
       <CreateTokenDialog
         open={isCreateDialogOpen}
-        loading={actionLoading}
         onOpenChange={setIsCreateDialogOpen}
         onSubmit={createToken}
       />
@@ -181,7 +180,6 @@ function TokenPageContent() {
       <EditTokenDialog
         token={editingToken}
         open={isEditDialogOpen}
-        loading={actionLoading}
         onOpenChange={setIsEditDialogOpen}
         onSubmit={updateToken}
       />

@@ -24,7 +24,6 @@ import { TokenForm } from './TokenForm';
 // 创建代币对话框属性接口
 interface CreateTokenDialogProps {
   open: boolean;
-  loading: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: TokenCreateParams) => Promise<void>;
 }
@@ -34,7 +33,6 @@ interface CreateTokenDialogProps {
  */
 export function CreateTokenDialog({ 
   open, 
-  loading, 
   onOpenChange, 
   onSubmit 
 }: CreateTokenDialogProps) {
@@ -48,7 +46,7 @@ export function CreateTokenDialog({
           </DialogDescription>
         </DialogHeader>
         <TokenForm 
-          loading={loading} 
+          isEditMode={false}
           onSubmit={onSubmit} 
           onCancel={() => onOpenChange(false)} 
         />
@@ -61,7 +59,6 @@ export function CreateTokenDialog({
 interface EditTokenDialogProps {
   token: BinanceTokenResponse | null;
   open: boolean;
-  loading: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (id: number, data: TokenUpdateParams) => Promise<void>;
 }
@@ -72,7 +69,6 @@ interface EditTokenDialogProps {
 export function EditTokenDialog({ 
   token, 
   open, 
-  loading, 
   onOpenChange, 
   onSubmit 
 }: EditTokenDialogProps) {
@@ -101,8 +97,8 @@ export function EditTokenDialog({
           </DialogDescription>
         </DialogHeader>
         <TokenForm 
+          isEditMode={true}
           token={token} 
-          loading={loading} 
           onSubmit={handleSubmit} 
           onCancel={() => onOpenChange(false)} 
         />
