@@ -1,15 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { 
-  BinanceTokenResponse, 
-  SyncStatusResponse, 
-  getTokens, 
-  getTokensWithUsdtPairs, 
-  getTokensSyncStatus, 
-  syncExchangeTokens, 
-  syncUsdtTradingPairs 
-} from '@/api/token/service';
+import { tokenApi } from '@/api/tokens';
+import { BinanceTokenResponse, SyncStatusResponse, TokenCreateParams, TokenUpdateParams } from '@/types/token';
 import { useToast } from '@/components/ui/use-toast';
 
 /**
@@ -22,11 +15,16 @@ interface TokenContextState {
   syncStatus: SyncStatusResponse | null;
   selectedToken: BinanceTokenResponse | null;
   copiedAddress: string | null;
+  editingToken: BinanceTokenResponse | null;
+  isCreateDialogOpen: boolean;
+  isEditDialogOpen: boolean;
+  isDeleteDialogOpen: boolean;
   
   // UI状态
   activeTab: 'all' | 'usdt';
   loading: boolean;
   syncLoading: boolean;
+  actionLoading: boolean;
   searchTerm: string;
   hasContractFilter: boolean | undefined;
   page: number;
@@ -38,6 +36,10 @@ interface TokenContextState {
   setHasContractFilter: (hasContract: boolean | undefined) => void;
   setPage: (page: number) => void;
   setSelectedToken: (token: BinanceTokenResponse | null) => void;
+  setEditingToken: (token: BinanceTokenResponse | null) => void;
+  setIsCreateDialogOpen: (isOpen: boolean) => void;
+  setIsEditDialogOpen: (isOpen: boolean) => void;
+  setIsDeleteDialogOpen: (isOpen: boolean) => void;
   
   // 业务方法
   loadTokens: () => Promise<void>;
@@ -45,6 +47,9 @@ interface TokenContextState {
   loadSyncStatus: () => Promise<void>;
   syncTokens: () => Promise<void>;
   syncUsdtPairs: () => Promise<void>;
+  createToken: (data: TokenCreateParams) => Promise<void>;
+  updateToken: (id: number, data: TokenUpdateParams) => Promise<void>;
+  deleteToken: (id: number) => Promise<void>;
   handleSearch: () => void;
   handlePrevPage: () => void;
   handleNextPage: () => void;
@@ -81,11 +86,16 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
   const [syncStatus, setSyncStatus] = useState<SyncStatusResponse | null>(null);
   const [selectedToken, setSelectedToken] = useState<BinanceTokenResponse | null>(null);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const [editingToken, setEditingToken] = useState<BinanceTokenResponse | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // UI状态
   const [activeTab, setActiveTab] = useState<'all' | 'usdt'>('all');
   const [loading, setLoading] = useState(true);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [hasContractFilter, setHasContractFilter] = useState<boolean | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -100,8 +110,8 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
     try {
       setLoading(true);
       const skip = (page - 1) * limit;
-      const data = await getTokens(skip, limit, searchTerm ?? undefined, hasContractFilter);
-      setTokens(data);
+      const response = await tokenApi.getTokens(skip, limit, searchTerm ?? undefined, hasContractFilter);
+      setTokens(response.data);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       toast({
@@ -122,8 +132,8 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
     try {
       setLoading(true);
       const skip = (page - 1) * limit;
-      const data = await getTokensWithUsdtPairs(skip, limit);
-      setUsdtPairTokens(data);
+      const response = await tokenApi.getTokensWithUsdtPairs(skip, limit);
+      setUsdtPairTokens(response.data);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       toast({
@@ -142,8 +152,8 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
    */
   const loadSyncStatus = async (): Promise<void> => {
     try {
-      const status = await getTokensSyncStatus();
-      setSyncStatus(status);
+      const response = await tokenApi.getTokensSyncStatus();
+      setSyncStatus(response.data);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       toast({
@@ -161,7 +171,8 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
   const syncTokens = async (): Promise<void> => {
     try {
       setSyncLoading(true);
-      const response = await syncExchangeTokens({ limit: 100, force_update: false });
+      const apiResponse = await tokenApi.syncExchangeTokens({ limit: 10000, force_update: false });
+      const response = apiResponse.data;
       
       if (response.success) {
         toast({
@@ -202,7 +213,7 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
   const syncUsdtPairs = async (): Promise<void> => {
     try {
       setSyncLoading(true);
-      await syncUsdtTradingPairs();
+      await tokenApi.syncUsdtTradingPairs();
       
       toast({
         title: '同步USDT交易对成功',
@@ -226,6 +237,109 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
       console.error('同步USDT交易对失败:', error);
     } finally {
       setSyncLoading(false);
+    }
+  };
+  
+  /**
+   * 创建新代币
+   * @param data 代币创建数据
+   */
+  const createToken = async (data: TokenCreateParams): Promise<void> => {
+    try {
+      setActionLoading(true);
+      await tokenApi.createToken(data);
+      
+      toast({
+        title: '创建代币成功',
+        description: `已成功创建代币 ${data.coin}`,
+      });
+      
+      // 重新加载数据
+      loadTokens();
+      loadSyncStatus();
+      setIsCreateDialogOpen(false);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      toast({
+        title: '创建代币失败',
+        description: `创建代币时发生错误: ${errorMessage}`,
+        variant: 'destructive',
+      });
+      console.error('创建代币失败:', error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+  
+  /**
+   * 更新代币信息
+   * @param id 代币ID
+   * @param data 代币更新数据
+   */
+  const updateToken = async (id: number, data: TokenUpdateParams): Promise<void> => {
+    try {
+      setActionLoading(true);
+      await tokenApi.updateToken(id, data);
+      
+      toast({
+        title: '更新代币成功',
+        description: `已成功更新代币信息`,
+      });
+      
+      // 重新加载数据
+      if (activeTab === 'all') {
+        loadTokens();
+      } else {
+        loadUsdtPairTokens();
+      }
+      setIsEditDialogOpen(false);
+      setEditingToken(null);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      toast({
+        title: '更新代币失败',
+        description: `更新代币信息时发生错误: ${errorMessage}`,
+        variant: 'destructive',
+      });
+      console.error('更新代币失败:', error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+  
+  /**
+   * 删除代币
+   * @param id 代币ID
+   */
+  const deleteToken = async (id: number): Promise<void> => {
+    try {
+      setActionLoading(true);
+      await tokenApi.deleteToken(id);
+      
+      toast({
+        title: '删除代币成功',
+        description: `已成功删除代币`,
+      });
+      
+      // 重新加载数据
+      if (activeTab === 'all') {
+        loadTokens();
+      } else {
+        loadUsdtPairTokens();
+      }
+      loadSyncStatus();
+      setIsDeleteDialogOpen(false);
+      setEditingToken(null);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      toast({
+        title: '删除代币失败',
+        description: `删除代币时发生错误: ${errorMessage}`,
+        variant: 'destructive',
+      });
+      console.error('删除代币失败:', error);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -351,11 +465,16 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
     syncStatus,
     selectedToken,
     copiedAddress,
+    editingToken,
+    isCreateDialogOpen,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
     
     // UI状态
     activeTab,
     loading,
     syncLoading,
+    actionLoading,
     searchTerm,
     hasContractFilter,
     page,
@@ -367,6 +486,10 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
     setHasContractFilter,
     setPage,
     setSelectedToken,
+    setEditingToken,
+    setIsCreateDialogOpen,
+    setIsEditDialogOpen,
+    setIsDeleteDialogOpen,
     
     // 业务方法
     loadTokens,
@@ -374,6 +497,9 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
     loadSyncStatus,
     syncTokens,
     syncUsdtPairs,
+    createToken,
+    updateToken,
+    deleteToken,
     handleSearch,
     handlePrevPage,
     handleNextPage,
@@ -384,8 +510,9 @@ export function TokenProvider({ children }: TokenProviderProps): React.ReactElem
     getFirstNetworkAndAddress,
     formatDate
   }), [
-    tokens, usdtPairTokens, syncStatus, selectedToken, copiedAddress,
-    activeTab, loading, syncLoading, searchTerm, hasContractFilter, page,
+    tokens, usdtPairTokens, syncStatus, selectedToken, copiedAddress, editingToken,
+    isCreateDialogOpen, isEditDialogOpen, isDeleteDialogOpen,
+    activeTab, loading, syncLoading, actionLoading, searchTerm, hasContractFilter, page,
     // 方法不需要添加到依赖数组中，因为它们不会改变
   ]);
 

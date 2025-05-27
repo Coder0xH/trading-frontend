@@ -2,13 +2,18 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import {
   TokenStatsCards,
   SyncActions,
   TokenSearchFilter,
   TokenTable,
   ContractAddressDialog,
-  Pagination
+  Pagination,
+  CreateTokenDialog,
+  EditTokenDialog,
+  DeleteTokenDialog
 } from '@/components/token';
 import { TokenProvider, useTokenContext } from '@/contexts/TokenContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -25,16 +30,28 @@ function TokenPageContent() {
     syncStatus,
     loading,
     syncLoading,
+    actionLoading,
     searchTerm,
     page,
     limit,
     selectedToken,
+    editingToken,
     copiedAddress,
+    isCreateDialogOpen,
+    isEditDialogOpen,
+    isDeleteDialogOpen,
     setActiveTab,
     setSearchTerm,
     setSelectedToken,
+    setEditingToken,
+    setIsCreateDialogOpen,
+    setIsEditDialogOpen,
+    setIsDeleteDialogOpen,
     syncTokens,
     syncUsdtPairs,
+    createToken,
+    updateToken,
+    deleteToken,
     handleSearch,
     handlePrevPage,
     handleNextPage,
@@ -46,7 +63,16 @@ function TokenPageContent() {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">代币管理</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">代币管理</h1>
+        <Button 
+          onClick={() => setIsCreateDialogOpen(true)}
+          className="flex items-center gap-1"
+        >
+          <Plus className="h-4 w-4" />
+          创建代币
+        </Button>
+      </div>
       
       {/* 代币统计信息卡片 */}
       <TokenStatsCards 
@@ -88,7 +114,15 @@ function TokenPageContent() {
               getNetworkCount={getNetworkCount} 
               getFirstNetworkAndAddress={getFirstNetworkAndAddress} 
               formatDate={formatDate} 
-              onSelectToken={setSelectedToken} 
+              onSelectToken={setSelectedToken}
+              onEditToken={(token) => {
+                setEditingToken(token);
+                setIsEditDialogOpen(true);
+              }}
+              onDeleteToken={(token) => {
+                setEditingToken(token);
+                setIsDeleteDialogOpen(true);
+              }}
             />
           </Card>
         </TabsContent>
@@ -103,7 +137,15 @@ function TokenPageContent() {
               getNetworkCount={getNetworkCount} 
               getFirstNetworkAndAddress={getFirstNetworkAndAddress} 
               formatDate={formatDate} 
-              onSelectToken={setSelectedToken} 
+              onSelectToken={setSelectedToken}
+              onEditToken={(token) => {
+                setEditingToken(token);
+                setIsEditDialogOpen(true);
+              }}
+              onDeleteToken={(token) => {
+                setEditingToken(token);
+                setIsDeleteDialogOpen(true);
+              }}
             />
           </Card>
         </TabsContent>
@@ -125,6 +167,32 @@ function TokenPageContent() {
         onOpenChange={(open) => !open && setSelectedToken(null)} 
         copiedAddress={copiedAddress} 
         onCopy={copyToClipboard} 
+      />
+      
+      {/* 创建代币对话框 */}
+      <CreateTokenDialog
+        open={isCreateDialogOpen}
+        loading={actionLoading}
+        onOpenChange={setIsCreateDialogOpen}
+        onSubmit={createToken}
+      />
+      
+      {/* 编辑代币对话框 */}
+      <EditTokenDialog
+        token={editingToken}
+        open={isEditDialogOpen}
+        loading={actionLoading}
+        onOpenChange={setIsEditDialogOpen}
+        onSubmit={updateToken}
+      />
+      
+      {/* 删除代币对话框 */}
+      <DeleteTokenDialog
+        token={editingToken}
+        open={isDeleteDialogOpen}
+        loading={actionLoading}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={deleteToken}
       />
     </div>
   );

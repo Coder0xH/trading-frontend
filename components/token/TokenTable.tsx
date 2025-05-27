@@ -9,11 +9,11 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { BinanceTokenResponse } from '@/api/token/service';
+import { BinanceTokenResponse } from '@/types/token';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
 
 interface TokenTableProps {
   readonly tokens: readonly BinanceTokenResponse[];
@@ -23,6 +23,8 @@ interface TokenTableProps {
   readonly getFirstNetworkAndAddress: (token: BinanceTokenResponse) => { network: string, address: string } | null;
   readonly formatDate: (dateString: string | null) => string;
   readonly onSelectToken: (token: BinanceTokenResponse) => void;
+  readonly onEditToken?: (token: BinanceTokenResponse) => void;
+  readonly onDeleteToken?: (token: BinanceTokenResponse) => void;
 }
 
 /**
@@ -36,7 +38,9 @@ export function TokenTable({
   getNetworkCount, 
   getFirstNetworkAndAddress, 
   formatDate,
-  onSelectToken
+  onSelectToken,
+  onEditToken,
+  onDeleteToken
 }: TokenTableProps) {
   /**
    * 渲染加载状态的骨架屏
@@ -52,6 +56,7 @@ export function TokenTable({
         <TableCell><Skeleton className="h-4 w-32" /></TableCell>
         <TableCell><Skeleton className="h-4 w-16" /></TableCell>
         <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
       </TableRow>
     ));
   };
@@ -62,7 +67,7 @@ export function TokenTable({
   const renderEmptyState = () => {
     return (
       <TableRow>
-        <TableCell colSpan={8} className="text-center py-4">
+        <TableCell colSpan={9} className="text-center py-4">
           没有找到代币数据
         </TableCell>
       </TableRow>
@@ -136,6 +141,32 @@ export function TokenTable({
           )}
         </TableCell>
         <TableCell>{formatDate(token.last_synced_at)}</TableCell>
+        <TableCell>
+          <div className="flex items-center space-x-2">
+            {onEditToken && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8" 
+                onClick={() => onEditToken(token)}
+                title="编辑代币"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            {onDeleteToken && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-destructive" 
+                onClick={() => onDeleteToken(token)}
+                title="删除代币"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </TableCell>
       </TableRow>
     ));
   };
@@ -168,6 +199,7 @@ export function TokenTable({
           <TableHead className="w-[250px]">合约地址</TableHead>
           <TableHead className="w-[100px]">交易状态</TableHead>
           <TableHead className="w-[120px]">最后同步</TableHead>
+          <TableHead className="w-[100px]">操作</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
