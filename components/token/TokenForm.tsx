@@ -4,22 +4,72 @@ import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { BinanceTokenResponse, TokenCreateParams, TokenUpdateParams } from '@/types/token';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Loader2 } from 'lucide-react';
+import { Form } from '@/components/ui/form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TokenFormBasicInfo } from './TokenFormBasicInfo';
+import { TokenFormPermissions } from './TokenFormPermissions';
+import { ContractAddressInput } from './ContractAddressInput';
 
-// 创建代币表单验证模式
+/**
+ * 合约地址类型定义
+ */
+type ContractAddress = {
+  network: string;
+  address: string;
+};
+
+/**
+ * 创建代币参数类型
+ */
+type TokenCreateParams = {
+  coin: string;
+  name?: string;
+  exchange: string;
+  is_legal_money: boolean;
+  trading: boolean;
+  deposit_all_enable: boolean;
+  withdraw_all_enable: boolean;
+  usdt_trading_pair?: string;
+  has_contract_address: boolean;
+  contract_addresses: ContractAddress[];
+};
+
+/**
+ * 更新代币参数类型
+ */
+type TokenUpdateParams = {
+  name?: string;
+  exchange: string;
+  is_legal_money: boolean;
+  trading: boolean;
+  deposit_all_enable: boolean;
+  withdraw_all_enable: boolean;
+  usdt_trading_pair?: string;
+  has_contract_address: boolean;
+  contract_addresses: ContractAddress[];
+};
+
+/**
+ * 币安代币响应类型
+ */
+type BinanceTokenResponse = {
+  coin?: string;
+  name?: string;
+  exchange?: string;
+  is_legal_money?: boolean;
+  trading?: boolean;
+  deposit_all_enable?: boolean;
+  withdraw_all_enable?: boolean;
+  usdt_trading_pair?: string;
+  has_contract_address?: boolean;
+  contract_addresses?: ContractAddress[];
+};
+
+/**
+ * 创建代币表单验证模式
+ */
 const createTokenSchema = z.object({
   coin: z.string().min(1, '代币符号不能为空'),
   name: z.string().optional(),
@@ -30,9 +80,15 @@ const createTokenSchema = z.object({
   withdraw_all_enable: z.boolean().default(true),
   usdt_trading_pair: z.string().optional(),
   has_contract_address: z.boolean().default(false),
+  contract_addresses: z.array(z.object({
+    network: z.string(),
+    address: z.string()
+  })).default([]),
 });
 
-// 更新代币表单验证模式
+/**
+ * 更新代币表单验证模式
+ */
 const updateTokenSchema = z.object({
   name: z.string().optional(),
   exchange: z.string().default('binance'),
@@ -42,38 +98,55 @@ const updateTokenSchema = z.object({
   withdraw_all_enable: z.boolean().default(true),
   usdt_trading_pair: z.string().optional(),
   has_contract_address: z.boolean().default(false),
+  contract_addresses: z.array(z.object({
+    network: z.string(),
+    address: z.string()
+  })).default([]),
 });
 
-// 定义表单类型
+/**
+ * 创建代币表单值类型
+ */
 type CreateTokenFormValues = z.infer<typeof createTokenSchema>;
+
+/**
+ * 更新代币表单值类型
+ */
 type UpdateTokenFormValues = z.infer<typeof updateTokenSchema>;
 
-// 代币表单属性接口
-interface CreateTokenFormProps {
-  token?: undefined;
-  loading?: boolean;
+/**
+ * 代币表单基础属性接口
+ */
+interface BaseTokenFormProps {
+  onCancel: () => void;
+}
+
+/**
+ * 创建代币表单属性接口
+ */
+interface CreateTokenFormProps extends BaseTokenFormProps {
+  isEditMode: false;
   onSubmit: (data: TokenCreateParams) => Promise<void>;
-  onCancel: () => void;
 }
 
-interface UpdateTokenFormProps {
+/**
+ * 更新代币表单属性接口
+ */
+interface UpdateTokenFormProps extends BaseTokenFormProps {
+  isEditMode: true;
   token: BinanceTokenResponse;
-  loading?: boolean;
   onSubmit: (data: TokenUpdateParams) => Promise<void>;
-  onCancel: () => void;
 }
-
-type TokenFormProps = CreateTokenFormProps | UpdateTokenFormProps;
-
-type FormData = CreateTokenFormValues | UpdateTokenFormValues;
 
 /**
  * 代币表单组件
- * 用于创建或更新代币
+ * @param props 组件属性
+ * @returns 代币表单组件
  */
-export function TokenForm(props: TokenFormProps) {
-  const { loading, onCancel } = props;
-  const isEditMode = 'token' in props && props.token !== undefined;
+export function TokenForm(props: CreateTokenFormProps | UpdateTokenFormProps) {
+  const { isEditMode } = props;
+  const [activeTab, setActiveTab] = useState<string>('basic');
+  const [contractAddresses, setContractAddresses] = useState<ContractAddress[]>([]);
   
   // 创建模式的表单
   const createForm = useForm({
@@ -88,6 +161,7 @@ export function TokenForm(props: TokenFormProps) {
       withdraw_all_enable: true,
       usdt_trading_pair: '',
       has_contract_address: false,
+      contract_addresses: [],
     },
   });
 
@@ -103,469 +177,175 @@ export function TokenForm(props: TokenFormProps) {
       withdraw_all_enable: true,
       usdt_trading_pair: '',
       has_contract_address: false,
+      contract_addresses: [],
     },
   });
 
-  // 当编辑模式下token变化时，更新表单值
+  // 初始化表单数据
   useEffect(() => {
-    if (isEditMode && 'token' in props && props.token) {
-      const token = props.token;
+    if (isEditMode && (props as UpdateTokenFormProps).token) {
+      const token = (props as UpdateTokenFormProps).token;
       updateForm.reset({
         name: token.name || '',
         exchange: token.exchange || 'binance',
-        is_legal_money: token.is_legal_money,
-        trading: token.trading,
-        deposit_all_enable: token.deposit_all_enable,
-        withdraw_all_enable: token.withdraw_all_enable,
+        is_legal_money: token.is_legal_money || false,
+        trading: token.trading || true,
+        deposit_all_enable: token.deposit_all_enable || true,
+        withdraw_all_enable: token.withdraw_all_enable || true,
         usdt_trading_pair: token.usdt_trading_pair || '',
-        has_contract_address: token.has_contract_address,
+        has_contract_address: token.has_contract_address || false,
+        contract_addresses: (token.contract_addresses || []) as any,
       });
+      
+      // 初始化合约地址
+      if (token.contract_addresses && token.contract_addresses.length > 0) {
+        setContractAddresses(token.contract_addresses);
+      }
     }
   }, [isEditMode, props, updateForm]);
 
-  // 处理表单提交
-  const handleCreateSubmit = async (values: any) => {
+  /**
+   * 处理合约地址变更
+   * @param addresses 合约地址数组
+   */
+  const handleContractAddressesChange = (addresses: ContractAddress[]) => {
+    setContractAddresses(addresses);
+    if (isEditMode) {
+      updateForm.setValue('contract_addresses', addresses as any);
+    } else {
+      createForm.setValue('contract_addresses', addresses as any);
+    }
+  };
+
+  /**
+   * 处理创建表单提交
+   * @param values 表单值
+   */
+  const handleCreateSubmit = async (values: CreateTokenFormValues) => {
+    const formData: TokenCreateParams = {
+      coin: values.coin,
+      name: values.name,
+      exchange: values.exchange,
+      is_legal_money: values.is_legal_money,
+      trading: values.trading,
+      deposit_all_enable: values.deposit_all_enable,
+      withdraw_all_enable: values.withdraw_all_enable,
+      usdt_trading_pair: values.usdt_trading_pair,
+      has_contract_address: values.has_contract_address,
+      contract_addresses: values.has_contract_address ? contractAddresses : [],
+    };
     if (!isEditMode) {
-      const formData: TokenCreateParams = {
-        coin: values.coin,
-        name: values.name,
-        exchange: values.exchange,
-        is_legal_money: values.is_legal_money,
-        trading: values.trading,
-        deposit_all_enable: values.deposit_all_enable,
-        withdraw_all_enable: values.withdraw_all_enable,
-        usdt_trading_pair: values.usdt_trading_pair,
-        has_contract_address: values.has_contract_address,
-      };
       await (props as CreateTokenFormProps).onSubmit(formData);
     }
   };
 
-  const handleUpdateSubmit = async (values: any) => {
-    if (isEditMode && 'token' in props && props.token) {
-      const updateData: TokenUpdateParams = {
-        coin: props.token.coin,
-        name: values.name,
-        exchange: values.exchange,
-        is_legal_money: values.is_legal_money,
-        trading: values.trading,
-        deposit_all_enable: values.deposit_all_enable,
-        withdraw_all_enable: values.withdraw_all_enable,
-        usdt_trading_pair: values.usdt_trading_pair,
-        has_contract_address: values.has_contract_address,
-      };
-      await (props as UpdateTokenFormProps).onSubmit(updateData);
+  /**
+   * 处理更新表单提交
+   * @param values 表单值
+   */
+  const handleUpdateSubmit = async (values: UpdateTokenFormValues) => {
+    const formData: TokenUpdateParams = {
+      name: values.name,
+      exchange: values.exchange,
+      is_legal_money: values.is_legal_money,
+      trading: values.trading,
+      deposit_all_enable: values.deposit_all_enable,
+      withdraw_all_enable: values.withdraw_all_enable,
+      usdt_trading_pair: values.usdt_trading_pair,
+      has_contract_address: values.has_contract_address,
+      contract_addresses: values.has_contract_address ? contractAddresses : [],
+    };
+    if (isEditMode) {
+      await (props as UpdateTokenFormProps).onSubmit(formData);
     }
   };
 
-  // 渲染创建表单
-  const renderCreateForm = () => (
-    <Form {...createForm}>
-      <form onSubmit={createForm.handleSubmit(handleCreateSubmit)} className="space-y-6">
-        <FormField
-          control={createForm.control}
-          name="coin"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>代币符号</FormLabel>
-              <FormControl>
-                <Input placeholder="例如: BTC" {...field} />
-              </FormControl>
-              <FormDescription>
-                代币的唯一标识符，通常是代币的缩写。
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+  // 当前使用的表单
+  const form = isEditMode ? updateForm : createForm;
 
-        <FormField
-          control={createForm.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>代币名称</FormLabel>
-              <FormControl>
-                <Input placeholder="例如: Bitcoin" {...field} />
-              </FormControl>
-              <FormDescription>
-                代币的完整名称。
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+  // 监听合约地址复选框变化
+  useEffect(() => {
+    // 使用回调函数监听表单变化
+    const subscription = form.watch((value: any) => {
+      if (value && value.has_contract_address && activeTab !== 'contract') {
+        setActiveTab('contract');
+      }
+    });
+    
+    // 清理函数
+    return () => {
+      // 安全地检查subscription是否有unsubscribe方法
+      if (subscription && typeof (subscription as any).unsubscribe === 'function') {
+        (subscription as any).unsubscribe();
+      }
+    };
+  }, [activeTab, form]);
 
-        <FormField
-          control={createForm.control}
-          name="exchange"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>交易所</FormLabel>
-              <FormControl>
-                <Input placeholder="例如: binance" {...field} />
-              </FormControl>
-              <FormDescription>
-                代币所属的交易所。
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+  // 创建表单提交处理函数
+  const onSubmit = (data: any) => {
+    if (isEditMode) {
+      return handleUpdateSubmit(data as UpdateTokenFormValues);
+    } else {
+      return handleCreateSubmit(data as CreateTokenFormValues);
+    }
+  };
 
-        <FormField
-          control={createForm.control}
-          name="usdt_trading_pair"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>USDT交易对</FormLabel>
-              <FormControl>
-                <Input placeholder="例如: BTCUSDT" {...field} />
-              </FormControl>
-              <FormDescription>
-                代币与USDT的交易对。
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="space-y-4">
-          <FormField
-            control={createForm.control}
-            name="is_legal_money"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
+  return (
+    <Form {...(form as any)}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>{isEditMode ? '编辑代币' : '创建新代币'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="basic">基本信息</TabsTrigger>
+                <TabsTrigger value="permissions">权限设置</TabsTrigger>
+                <TabsTrigger 
+                  value="contract" 
+                  disabled={!form.getValues()?.has_contract_address}
+                >
+                  合约地址
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="basic" className="space-y-4 pt-4">
+                {/* 使用as any强制类型转换，解决不同表单类型之间的兼容性问题 */}
+                <TokenFormBasicInfo 
+                  form={form as any} 
+                  isEditMode={isEditMode} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="permissions" className="space-y-4 pt-4">
+                {/* 使用as any强制类型转换，解决不同表单类型之间的兼容性问题 */}
+                <TokenFormPermissions 
+                  form={form as any} 
+                />
+              </TabsContent>
+              
+              <TabsContent value="contract" className="space-y-4 pt-4">
+                {form.getValues()?.has_contract_address && (
+                  <ContractAddressInput 
+                    addresses={contractAddresses}
+                    onChange={handleContractAddressesChange}
                   />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    法定货币
-                  </FormLabel>
-                  <FormDescription>
-                    是否为法定货币。
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={createForm.control}
-            name="trading"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    允许交易
-                  </FormLabel>
-                  <FormDescription>
-                    是否允许交易该代币。
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={createForm.control}
-            name="deposit_all_enable"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    允许充值
-                  </FormLabel>
-                  <FormDescription>
-                    是否允许充值该代币。
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={createForm.control}
-            name="withdraw_all_enable"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    允许提现
-                  </FormLabel>
-                  <FormDescription>
-                    是否允许提现该代币。
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={createForm.control}
-            name="has_contract_address"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    有合约地址
-                  </FormLabel>
-                  <FormDescription>
-                    该代币是否有合约地址。
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
-
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+        
         <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-          >
+          <Button type="button" variant="outline" onClick={props.onCancel}>
             取消
           </Button>
-          <Button
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                处理中...
-              </>
-            ) : '创建'}
+          <Button type="submit">
+            {isEditMode ? '保存更改' : '创建代币'}
           </Button>
         </div>
       </form>
     </Form>
   );
-
-  // 渲染更新表单
-  const renderUpdateForm = () => (
-    <Form {...updateForm}>
-      <form onSubmit={updateForm.handleSubmit(handleUpdateSubmit)} className="space-y-6">
-        <FormField
-          control={updateForm.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>代币名称</FormLabel>
-              <FormControl>
-                <Input placeholder="例如: Bitcoin" {...field} />
-              </FormControl>
-              <FormDescription>
-                代币的完整名称。
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={updateForm.control}
-          name="exchange"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>交易所</FormLabel>
-              <FormControl>
-                <Input placeholder="例如: binance" {...field} />
-              </FormControl>
-              <FormDescription>
-                代币所属的交易所。
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={updateForm.control}
-          name="usdt_trading_pair"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>USDT交易对</FormLabel>
-              <FormControl>
-                <Input placeholder="例如: BTCUSDT" {...field} />
-              </FormControl>
-              <FormDescription>
-                代币与USDT的交易对。
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="space-y-4">
-          <FormField
-            control={updateForm.control}
-            name="is_legal_money"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    法定货币
-                  </FormLabel>
-                  <FormDescription>
-                    是否为法定货币。
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={updateForm.control}
-            name="trading"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    允许交易
-                  </FormLabel>
-                  <FormDescription>
-                    是否允许交易该代币。
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={updateForm.control}
-            name="deposit_all_enable"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    允许充值
-                  </FormLabel>
-                  <FormDescription>
-                    是否允许充值该代币。
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={updateForm.control}
-            name="withdraw_all_enable"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    允许提现
-                  </FormLabel>
-                  <FormDescription>
-                    是否允许提现该代币。
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={updateForm.control}
-            name="has_contract_address"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>
-                    有合约地址
-                  </FormLabel>
-                  <FormDescription>
-                    该代币是否有合约地址。
-                  </FormDescription>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-          >
-            取消
-          </Button>
-          <Button
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                处理中...
-              </>
-            ) : '更新'}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  );
-
-  return isEditMode ? renderUpdateForm() : renderCreateForm();
 }
